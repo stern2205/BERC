@@ -1,0 +1,11 @@
+Sample Test Password: Sample@111
+Default Create Account Password: BatStateU123!
+
+berc29947@gmail.com
+bercommittee@29947
+
+02449e116ea2e15b121d7319bb784bbc
+
+$log = DB::table('login_logs')->where('id', 101)->first();
+
+$letter_request = $request->has('letter_request') ? 1 : 0;

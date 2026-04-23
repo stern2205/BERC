@@ -1,0 +1,185 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; font-weight: 400; background: #f9fafb; min-height: 100vh; padding: 20px; }
+.container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden; border: 1px solid #e5e7eb; }
+.header { background: white; border-bottom: 4px solid #1e3a8a; padding: 30px; text-align: center; }
+.header h1 { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 18px; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.02em; }
+
+/* ── Progress Bar ── */
+.progress-bar { display: flex; justify-content: space-around; padding: 18px 20px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.progress-bar::-webkit-scrollbar { display: none; }
+.progress-bar::before { content: ""; position: absolute; top: 40px; left: 5%; right: 5%; height: 2px; background: #e5e7eb; z-index: 1; }
+.step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; position: relative; z-index: 2; min-width: 60px; }
+.step-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; background: white; color: #9ca3af; border: 2px solid #e5e7eb; transition: all 0.3s ease; position: relative; z-index: 2; flex-shrink: 0; }
+.step-icon svg { width: 14px; height: 14px; }
+.step.active .step-icon { background: #1e3a8a; color: white; border-color: #1e3a8a; }
+.step.completed .step-icon { background: #1e3a8a; color: white; border-color: #1e3a8a; }
+.step.completed .step-icon svg { display: none; }
+.step.completed .step-icon::after { content: "✓"; position: absolute; color: white; font-size: 14px; font-weight: bold; }
+.step-label { font-family: 'Montserrat', sans-serif; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; text-align: center; line-height: 1.3; }
+.step.active .step-label { color: #1e3a8a; }
+
+/* ── Form Content ── */
+.form-content { padding: 40px; }
+.section-title { font-family: 'Montserrat', sans-serif; font-size: 18px; color: #1e3a8a; margin-bottom: 28px; text-align: center; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
+.subsection-heading { background: #f3f4f6; padding: 8px 16px; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #374151; border-left: 4px solid #dc2626; margin-bottom: 16px; margin-top: 24px; }
+
+/* ── Form Groups ── */
+.form-group { margin-bottom: 20px; display: grid; grid-template-columns: 200px 1fr; gap: 20px; align-items: center; }
+.form-label { font-size: 11px; font-family: 'Montserrat', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #1e3a8a; }
+.form-input, .form-select { width: 100%; padding: 11px 14px; border: 2px solid #f3f4f6; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; font-weight: 500; transition: all 0.2s ease; background: white; color: #111827; outline: none; }
+.form-input:focus, .form-select:focus { border-color: #1e3a8a; }
+
+/* ── Checkboxes / Radios ── */
+.check-label { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; color: #374151; font-weight: 500; }
+.check-label input[type="checkbox"] { margin-top: 3px; accent-color: #1e3a8a; cursor: pointer; flex-shrink: 0; }
+.check-label input[type="radio"] { margin-top: 3px; accent-color: #1e3a8a; cursor: pointer; flex-shrink: 0; }
+
+/* ── Buttons ── */
+.button-group { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 24px; border-top: 1px solid #e5e7eb; gap: 12px; }
+.btn { padding: 11px 28px; border: none; border-radius: 8px; font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s ease; }
+.btn-primary { background: #1e3a8a; color: white; box-shadow: 0 4px 12px rgba(30,58,138,0.3); }
+.btn-primary:hover { background: #1e40af; transform: translateY(-1px); }
+.btn-secondary { background: transparent; color: #9ca3af; border: none; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding: 11px 16px; }
+.btn-secondary:hover { color: #dc2626; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+.hidden { display: none; }
+.document-group { margin-bottom: 14px; }
+
+/* ── Summary ── */
+.summary-header-card { background: #1e3a8a; padding: 24px; border-radius: 10px; margin-bottom: 24px; color: white; text-align: center; }
+.summary-header-card h3 { font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em; }
+.summary-section { background: white; border: 2px solid #f3f4f6; border-radius: 10px; padding: 22px; margin-bottom: 18px; }
+.summary-section h4 { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 16px; }
+.confirm-box { background: #f9fafb; border: 2px solid #f3f4f6; border-radius: 10px; padding: 18px; margin-bottom: 22px; }
+
+#final-submit-btn { background: #1e3a8a; color: white; padding: 14px 50px; font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 20px rgba(30,58,138,0.3); width: 100%; max-width: 320px; }
+#final-submit-btn:hover:not(:disabled) { background: #1e40af; }
+#final-submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+#success-modal { animation: fadeIn 0.3s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.instructions-box { background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; }
+.instructions-box p { font-size: 12px; color: #1e40af; font-style: italic; line-height: 1.6; }
+
+/* ── Responsive table wrapper ── */
+.table-scroll-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 2px solid #e5e7eb; border-radius: 10px; margin-bottom: 28px; }
+.table-scroll-wrapper table { min-width: 560px; border: none; }
+
+/* ── Payment Cards ── */
+.payment-card { border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; background: white; position: relative; transition: filter 0.3s ease, opacity 0.3s ease, border-color 0.3s ease; overflow: hidden; }
+.payment-card.unavailable { filter: grayscale(1) brightness(0.97); opacity: 0.6; border-color: #d1d5db !important; }
+.unavail-overlay { display: none; position: absolute; inset: 0; z-index: 20; pointer-events: none; border-radius: 10px; overflow: hidden; }
+.payment-card.unavailable .unavail-overlay { display: block; }
+.unavail-overlay-bg { position: absolute; inset: 0; background: rgba(249, 250, 251, 0.60); }
+
+/* FIXED: Added missing closing brace here */
+.unavail-overlay-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-20deg); white-space: nowrap; font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.28em; color: transparent; -webkit-text-stroke: 1.5px rgba(100, 116, 139, 0.55); user-select: none; pointer-events: none; }
+
+/* ── Dynamic Inputs & Add Buttons ── */
+.input-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.input-row .form-input { flex: 1; margin-bottom: 0; }
+.btn-remove { background: none; border: none; color: #9ca3af; font-size: 16px; font-weight: bold; cursor: pointer; transition: color 0.2s ease; padding: 5px; display: flex; align-items: center; justify-content: center; }
+.btn-remove:hover { color: #dc2626; }
+.btn-add { background: transparent; border: 2px dashed #d1d5db; border-radius: 8px; color: #1e3a8a; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 12px; width: 100%; cursor: pointer; transition: all 0.2s ease; text-align: center; }
+.btn-add:hover { border-color: #1e3a8a; background: #eff6ff; }
+
+/* ══════════════════════════════════════════
+    RESPONSIVE BREAKPOINTS
+══════════════════════════════════════════ */
+
+/* ── Tablet (≤ 768px) ── */
+@media (max-width: 768px) {
+    body { padding: 0; }
+    .container { border-radius: 0; box-shadow: none; border: none; }
+    .header { padding: 20px 16px; }
+    .header h1 { font-size: 14px; }
+
+    .progress-bar { padding: 14px 12px 14px; justify-content: flex-start; gap: 0; }
+    .progress-bar::before { top: 36px; }
+    .step { min-width: 52px; gap: 6px; }
+    .step-icon { width: 28px; height: 28px; }
+    .step-label { font-size: 7.5px; letter-spacing: 0.03em; }
+
+    .form-content { padding: 20px 16px; }
+    .section-title { font-size: 15px; margin-bottom: 20px; }
+
+    .form-group { grid-template-columns: 1fr; gap: 6px; align-items: flex-start; }
+    .form-label { margin-bottom: 2px; }
+
+    /* Radios/checkboxes indented on mobile */
+    #section-2 .subsection-heading + div,
+    #section-2 div[style*="margin-left: 200px"],
+    #section-2 > div[style*="margin-left: 200px"] { margin-left: 0 !important; }
+
+    .button-group { flex-wrap: nowrap; gap: 8px; }
+    .btn { padding: 10px 18px; font-size: 10px; }
+    .btn-secondary { padding: 10px 10px; }
+
+    /* Responsive adjustment for the add button */
+    .btn-add { padding: 10px; font-size: 9px; }
+
+    /* Payment grid: stack on mobile */
+    #payment-cards-grid { grid-template-columns: 1fr !important; }
+
+    .payment-card { padding: 14px 16px; gap: 12px; }
+    .payment-card > div:first-of-type { width: 42px; height: 42px; border-radius: 10px; }
+
+    /* Summary grid: single column */
+    .summary-section > div[style*="grid-template-columns: 200px"] { display: block !important; }
+    .summary-section > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+
+    #final-submit-btn { padding: 13px 24px; width: 100%; max-width: 100%; }
+
+    /* Success modal */
+    #success-modal > div { padding: 24px 18px; }
+
+    /* ICF section indent remove */
+    #section-4 > div[style*="max-width"] { max-width: 100% !important; }
+
+    /* Duration date grid */
+    .form-group > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; gap: 10px; }
+
+    /* Multicenter row: wrap */
+    #section-2 div[style*="display: flex; gap: 24px"] { flex-wrap: wrap; gap: 12px !important; }
+}
+
+/* ── Small mobile (≤ 480px) ── */
+@media (max-width: 480px) {
+    .header h1 { font-size: 12px; }
+    .step-label { display: none; }
+    .step { min-width: 38px; }
+    .step-icon { width: 26px; height: 26px; }
+    .step-icon svg { width: 12px; height: 12px; }
+    .progress-bar::before { top: 30px; }
+
+    .form-content { padding: 16px 12px; }
+    .section-title { font-size: 13px; }
+    .subsection-heading { font-size: 10px; padding: 7px 12px; }
+
+    .btn { padding: 10px 14px; font-size: 9px; letter-spacing: 0.05em; }
+
+    /* Smaller add button on tight screens */
+    .btn-add { padding: 8px; font-size: 8px; }
+
+    .payment-card { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+    /* Receipt/manuscript upload flex wrap */
+    .upload-zone-flex { flex-direction: column !important; gap: 10px; }
+
+    /* Summary header */
+    .summary-header-card h3 { font-size: 15px; }
+    .summary-header-card p { font-size: 12px; }
+
+    /* Table min-width smaller on tiny screens */
+    .table-scroll-wrapper table { min-width: 420px; }
+
+    /* Success modal buttons stack */
+    #success-modal > div > div:last-child { flex-direction: column !important; }
+}
+
+/* ── Print ── */
+@media print {
+    body * { visibility: hidden; }
+    #success-modal, #success-modal * { visibility: visible; }
+    #success-modal { position: absolute; left: 0; top: 0; background: white !important; }
+    #success-modal button { display: none; }
+}
