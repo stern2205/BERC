@@ -178,7 +178,6 @@ class SecStaffController extends Controller
                 $idField   = "reviewer_{$i}_id";
                 $doneField = "reviewer_{$i}_done";
 
-                // Typo in your schema: "reviwer" instead of "reviewer"
                 $icfDoneField = "reviwer_{$i}_done";
 
                 // ─── PROCESS GENERAL ASSESSMENT FORM ───

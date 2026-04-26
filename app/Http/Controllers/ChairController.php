@@ -160,7 +160,6 @@ class ChairController extends Controller
                 Reviewer::create([
                     'user_id'              => $user->id,
                     'name'                 => $user->name,
-                    // Keeps exact case ('Panel Expert') to satisfy your DB CHECK constraint
                     'type'                 => $request->role,
                     'panel'                => $panel,
                     'specialization'       => $specialization,
@@ -203,7 +202,6 @@ class ChairController extends Controller
                 ], 403);
             }
 
-            // Because your schema uses ON DELETE CASCADE for reviewers and login_logs,
             // deleting the User automatically wipes their reviewer profile and logs perfectly.
             $user->delete();
 

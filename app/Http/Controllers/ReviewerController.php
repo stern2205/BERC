@@ -124,7 +124,6 @@ class ReviewerController extends Controller
                     }
                 }
 
-                // --- NEW: SLOT THE REVIEWER INTO ICF ASSESSMENT ---
                 $icfForm = DB::table('icf_assessments')->where('protocol_code', $protocol_code)->first();
 
                 if ($icfForm) {
@@ -684,7 +683,6 @@ class ReviewerController extends Controller
             }
 
             // 5. CHECK IF ALL REVIEWERS ARE DONE FOR THIS REVISION
-            // We get all rows for this specific protocol and revision version
             $allRowsForThisRevision = RevisionResponse::where('protocol_code', $request->protocol_code)
                 ->where('revision_number', $request->revision_number)
                 ->get();

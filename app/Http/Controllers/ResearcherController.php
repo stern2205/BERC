@@ -63,7 +63,6 @@ class ResearcherController extends Controller
             ->where('protocol_code', $application->protocol_code)
             ->get();
 
-        // --- NEW: UNIQUE ICF LANGUAGES ---
         // Filters for informed_consent, grabs the description (language),
         // makes them uniform case, and keeps only unique entries.
         $icfLanguages = $basicReqs->where('type', 'informed_consent')
@@ -332,9 +331,7 @@ class ResearcherController extends Controller
     {
         $user = auth()->user();
 
-        // ══════════════════════════════════════════════════════════
         // 1. FETCH & FORMAT MAIN APPLICATIONS
-        // ══════════════════════════════════════════════════════════
         $terminalStatuses = [
             'approved', 'Approved',
             'rejected', 'Rejected',
@@ -558,9 +555,7 @@ class ResearcherController extends Controller
             ];
         });
 
-        // ══════════════════════════════════════════════════════════
         // 2. FETCH & FORMAT RESUBMISSIONS (LATEST VERSION ONLY)
-        // ══════════════════════════════════════════════════════════
         $rawRevisions = ResearchApplicationRevision::with(['application', 'documents'])
             ->whereHas('application', function($q) use ($user) {
                 $q->where('user_id', $user->id)
@@ -828,7 +823,6 @@ class ResearcherController extends Controller
             ->get();
 
         // 2. FETCH ALL REVISIONS FOR THESE APPLICATIONS (For the Version Hub Modal)
-        // We pluck the protocol codes from the filtered list to optimize the query
         $protocolCodes = $applications->pluck('protocol_code');
 
         $allRevisions = ResearchApplicationRevision::with('documents')
