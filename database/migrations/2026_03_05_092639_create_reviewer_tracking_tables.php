@@ -32,7 +32,7 @@ return new class extends Migration
             $table->foreignId('reviewer_id')->constrained()->cascadeOnDelete();
 
             // Tracking the workflow state
-            $table->enum('status', ['Pending', 'Accepted', 'Declined', 'Expired'])->default('Pending');
+            $table->enum('status', ['Pending', 'Accepted', 'Declined', 'Expired', 'Rejected'])->default('Pending');
 
             // Timestamp logs for the timeline
             $table->timestamp('date_assigned')->useCurrent();

@@ -127,8 +127,13 @@ class ResearchApplicationStatusController extends Controller
                     ->get()
                     ->keyBy('reviewer_id');
 
-                // Clear old reviewer assignments
-                DB::table('application_reviewer')->where('protocol_code', $protocol_code)->delete();
+                DB::table('application_reviewer')
+                    ->where('protocol_code', $protocol_code)
+                    ->whereIn('status', ['Expired', 'Declined'])
+                    ->update([
+                        'status' => 'Rejected',
+                        'updated_at' => now(),
+                    ]);
 
                 if (!empty($request->reviewers)) {
                     $reviewerData = [];
@@ -140,23 +145,26 @@ class ResearchApplicationStatusController extends Controller
                         $reviewerId = $rev['reviewer_id'];
                         $existing = $existingReviewers->get($reviewerId);
 
-                        // Count accepted reviewers
                         if ($status === 'Accepted') {
                             $acceptedCount++;
                         }
 
-                        // Build reviewer record
-                        $reviewerData[] = [
-                            'protocol_code' => $protocol_code,
-                            'reviewer_id'   => $reviewerId,
-                            'status'        => $status,
-                            'date_assigned' => $existing ? $existing->date_assigned : now(),
-                            'date_accepted' => $existing ? $existing->date_accepted : ($status === 'Accepted' ? now() : null),
-                            'created_at'    => $existing ? $existing->created_at : now(),
-                            'updated_at'    => now(),
-                        ];
+                        DB::table('application_reviewer')->updateOrInsert(
+                            [
+                                'protocol_code' => $protocol_code,
+                                'reviewer_id'   => $reviewerId,
+                            ],
+                            [
+                                'status'        => $status,
+                                'date_assigned' => $existing ? $existing->date_assigned : now(),
+                                'date_accepted' => $existing
+                                    ? $existing->date_accepted
+                                    : ($status === 'Accepted' ? now() : null),
+                                'created_at'    => $existing ? $existing->created_at : now(),
+                                'updated_at'    => now(),
+                            ]
+                        );
 
-                        // Create placeholder routing logs for reviewer slots
                         if ($currentStatus === 'awaiting_reviewer_approval' && !$existing) {
                             ProtocolRoutingLog::create([
                                 'protocol_code'   => $protocol_code,
@@ -169,9 +177,6 @@ class ResearchApplicationStatusController extends Controller
                             ]);
                         }
                     }
-
-                    // Insert updated reviewer assignments
-                    DB::table('application_reviewer')->insert($reviewerData);
 
                     // --------------------------------------------------
                     // 6. AUTO TRANSITION TO "UNDER REVIEW"
@@ -251,6 +256,126 @@ class ResearchApplicationStatusController extends Controller
                 'success' => false,
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+    public function expireAcceptedReviewerForReassignment(Request $request, $protocol_code)
+    {
+        $request->validate([
+            'reviewer_id' => 'required|integer|exists:reviewers,id',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $application = ResearchApplications::where('protocol_code', $protocol_code)->firstOrFail();
+
+            $daysAllowed = $application->review_classification === 'Expedited'
+                ? 10
+                : ($application->review_classification === 'Full Board' ? 20 : null);
+
+            if (!$daysAllowed) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only Expedited and Full Board protocols use review deadlines.'
+                ], 422);
+            }
+
+            $reviewerRow = DB::table('application_reviewer')
+                ->where('protocol_code', $protocol_code)
+                ->where('reviewer_id', $request->reviewer_id)
+                ->where('status', 'Accepted')
+                ->first();
+
+            if (!$reviewerRow) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Reviewer is not currently accepted for this protocol.'
+                ], 404);
+            }
+
+            $acceptedAt = $reviewerRow->date_accepted ?? $reviewerRow->date_assigned;
+            $deadline = \Carbon\Carbon::parse($acceptedAt)->addDays($daysAllowed);
+
+            if (now()->lessThan($deadline)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Reviewer deadline has not passed yet.'
+                ], 422);
+            }
+
+            DB::table('application_reviewer')
+                ->where('protocol_code', $protocol_code)
+                ->where('reviewer_id', $request->reviewer_id)
+                ->update([
+                    'status' => 'Rejected',
+                    'updated_at' => now(),
+                ]);
+
+            $this->removeReviewerFromAssessmentTables($protocol_code, $request->reviewer_id);
+
+            $application->update([
+                'status' => 'awaiting_reviewer_approval',
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reviewer marked as rejected and removed from assessment slots.'
+            ]);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function removeReviewerFromAssessmentTables(string $protocolCode, int $reviewerId): void
+    {
+        $assessment = DB::table('assessment_forms')
+            ->where('protocol_code', $protocolCode)
+            ->first();
+
+        if ($assessment) {
+            $updates = ['updated_at' => now()];
+
+            foreach ([1, 2, 3] as $slot) {
+                $reviewerCol = "reviewer_{$slot}_id";
+                $doneCol = "reviewer_{$slot}_done";
+
+                if ((int) $assessment->$reviewerCol === (int) $reviewerId) {
+                    $updates[$reviewerCol] = null;
+                    $updates[$doneCol] = null;
+                }
+            }
+
+            DB::table('assessment_forms')
+                ->where('protocol_code', $protocolCode)
+                ->update($updates);
+        }
+
+        $icf = DB::table('icf_assessments')
+            ->where('protocol_code', $protocolCode)
+            ->first();
+
+        if ($icf) {
+            $updates = ['updated_at' => now()];
+
+            foreach ([1, 2, 3] as $slot) {
+                $reviewerCol = "reviewer_{$slot}_id";
+
+                if ((int) $icf->$reviewerCol === (int) $reviewerId) {
+                    $updates[$reviewerCol] = null;
+                }
+            }
+
+            DB::table('icf_assessments')
+                ->where('protocol_code', $protocolCode)
+                ->update($updates);
         }
     }
 }

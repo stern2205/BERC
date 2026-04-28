@@ -155,6 +155,15 @@
             </div>
 
             <div class="flex items-center space-x-6 border-l border-gray-200 pl-6 py-4">
+                <button type="button"
+                        onclick="restartHistoryTutorial()"
+                        class="flex items-center gap-2 transition-all hover:-translate-y-0.5 text-gray-500 hover:text-bsu-dark">
+                    <svg class="w-4 h-4 shrink-0 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.228 9c.549-1.165 1.823-2 3.272-2 1.933 0 3.5 1.343 3.5 3 0 1.305-.973 2.416-2.333 2.83-.727.221-1.167.874-1.167 1.67M12 18h.01M12 3a9 9 0 100 18 9 9 0 000-18z"/>
+                    </svg>
+                    <span>VIEW TUTORIAL</span>
+                </button>
                 <a href="{{ route('settings') }}" class="flex items-center gap-2 transition-all hover:-translate-y-0.5 {{ request()->routeIs('settings') ? 'text-bsu-dark font-black' : 'text-gray-500 hover:text-bsu-dark' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -1099,6 +1108,106 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Initialize App ──
 renderApplications();
 
+</script>
+
+<script>
+function startHistoryTutorial({ manual = false } = {}) {
+    const userId = @json(auth()->id());
+    const storageKey = 'berc_tutorial_step_' + userId;
+
+    if (manual) {
+        localStorage.removeItem(storageKey);
+        localStorage.setItem(storageKey, 'history');
+    }
+
+    if (typeof window.driver === 'undefined') {
+        console.error("Driver.js is missing on the History page!");
+        return;
+    }
+
+    const driver = window.driver.js.driver;
+
+    const tour = driver({
+        showProgress: true,
+        allowClose: manual ? true : false,
+        overlayColor: 'rgba(33, 60, 113, 0.75)',
+        nextBtnText: 'Next →',
+        prevBtnText: '← Back',
+        steps: [
+            {
+                element: '.search-filter-bar',
+                popover: {
+                    title: 'Search & Filter Archives',
+                    description: 'Use the search bar to find specific titles or record numbers, and use the dropdown to filter by Completed or Rejected status.',
+                    side: "bottom",
+                    align: 'start'
+                }
+            },
+            {
+                element: '.app-card',
+                popover: {
+                    title: 'Your History Hub',
+                    description: 'All finalized applications are stored here. Click any row to view its timeline, download the official Decision Letter, and access past files.',
+                    side: "top",
+                    align: 'start'
+                }
+            },
+            {
+                popover: {
+                    title: 'Tour Complete! 🎉',
+                    description: 'You are now ready to use the BERC system.',
+                    side: "bottom",
+                    align: 'center',
+                    doneBtnText: manual ? 'Finish' : 'Finish Tour'
+                }
+            }
+        ],
+        onDestroyStarted: () => {
+            if (!tour.hasNextStep()) {
+                localStorage.removeItem(storageKey);
+
+                if (!manual) {
+                    fetch('{{ route("tutorial.complete") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => console.log('Database updated:', data.message))
+                    .catch(error => console.error('Error updating tutorial status:', error));
+                }
+
+                tour.destroy();
+            } else {
+                tour.destroy();
+            }
+        }
+    });
+
+    tour.drive();
+}
+
+function restartHistoryTutorial() {
+    startHistoryTutorial({ manual: true });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const isFirstLogin = @json(auth()->user()->is_first_login);
+    const userId = @json(auth()->id());
+    const storageKey = 'berc_tutorial_step_' + userId;
+    const tourState = localStorage.getItem(storageKey);
+
+    if (!isFirstLogin) {
+        localStorage.removeItem(storageKey);
+        return;
+    }
+
+    if (tourState === 'history') {
+        startHistoryTutorial({ manual: false });
+    }
+});
 </script>
 </body>
 </html>

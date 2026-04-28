@@ -973,8 +973,13 @@
         renderCalendar();
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Dynamic Injection: Ensure Driver.js is loaded
-            if (typeof window.driver === 'undefined') {
+
+            function loadDriverThenRun(callback) {
+                if (typeof window.driver !== 'undefined') {
+                    callback();
+                    return;
+                }
+
                 const css = document.createElement('link');
                 css.rel = 'stylesheet';
                 css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
@@ -982,108 +987,126 @@
 
                 const script = document.createElement('script');
                 script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-                script.onload = initTour;
+                script.onload = callback;
                 document.head.appendChild(script);
-            } else {
-                initTour();
             }
 
-            function initTour() {
+            function runReviewerCalendarTutorial(manual = false) {
                 const isFirstLogin = @json(auth()->user()->is_first_login);
                 const userId = @json(auth()->id());
                 const storageKey = 'berc_tutorial_step_' + userId;
 
-                // If they already changed their password, wipe memory and abort
-                if (!isFirstLogin) {
+                if (manual) {
+                    localStorage.removeItem(storageKey);
+                    localStorage.setItem(storageKey, 'rev_calendar');
+                }
+
+                if (!manual && !isFirstLogin) {
                     localStorage.removeItem(storageKey);
                     return;
                 }
 
                 const tourState = localStorage.getItem(storageKey);
 
-                // Trigger ONLY if they arrived from the Dashboard
-                if (tourState === 'rev_calendar') {
-                    const driver = window.driver.js.driver;
-                    const tour = driver({
-                        showProgress: true,
-                        allowClose: false,
-                        overlayColor: 'rgba(33, 60, 113, 0.75)',
-                        nextBtnText: 'Next &rarr;',
-                        prevBtnText: '&larr; Back',
+                if (tourState === 'rev_calendar_manual_skip') {
+                    localStorage.removeItem(storageKey);
+                    return;
+                }
 
-                        onDestroyStarted: () => {
-                            if (!tour.hasNextStep()) {
-                                // Move to the Invitations page next
-                                localStorage.setItem(storageKey, 'rev_invitations');
-                                tour.destroy();
-                                window.location.href = "{{ route('reviewer.invitations') ?? '/reviewer/invitations' }}";
+                if (!manual && tourState !== 'rev_calendar') {
+                    return;
+                }
+
+                const driver = window.driver.js.driver;
+
+                const tour = driver({
+                    showProgress: true,
+                    allowClose: manual ? true : false,
+                    overlayColor: 'rgba(33, 60, 113, 0.75)',
+                    nextBtnText: 'Next →',
+                    prevBtnText: '← Back',
+
+                    onDestroyStarted: () => {
+                        if (!tour.hasNextStep()) {
+                            if (manual) {
+                                localStorage.setItem(storageKey, 'rev_invitations_manual_skip');
                             } else {
-                                tour.destroy();
+                                localStorage.setItem(storageKey, 'rev_invitations');
+                            }
+
+                            tour.destroy();
+                            window.location.href = "{{ route('reviewer.invitations') ?? '/reviewer/invitations' }}";
+                        } else {
+                            tour.destroy();
+                        }
+                    },
+
+                    steps: [
+                        {
+                            element: '#tour-calendar-legend',
+                            popover: {
+                                title: 'Visual Tracking',
+                                description: 'Every protocol is color-coded based on its current status. As a reviewer, you will primarily look for items flagged as Assigned or At Reviewer.',
+                                side: "bottom",
+                                align: 'start'
                             }
                         },
-
-                        steps: [
-                            {
-                                element: '#tour-calendar-legend',
-                                popover: {
-                                    title: 'Visual Tracking',
-                                    description: 'Every protocol is color-coded based on its current status. As a reviewer, you will primarily look for items flagged as "Assigned" or "At Reviewer".',
-                                    side: "bottom",
-                                    align: 'start'
-                                }
-                            },
-                            {
-                                element: '#tour-calendar-rules',
-                                popover: {
-                                    title: 'Key Dates',
-                                    description: 'Committee meeting days and application cut-off dates are automatically generated and marked on the calendar for your reference.',
-                                    side: "bottom",
-                                    align: 'start'
-                                }
-                            },
-                            {
-                                element: '#tour-calendar-filters',
-                                popover: {
-                                    title: 'Filter Views',
-                                    description: 'If the calendar looks cluttered, use these buttons to isolate specific statuses—like filtering to show ONLY deadlines or applications waiting for your assessment.',
-                                    side: "bottom",
-                                    align: 'start'
-                                }
-                            },
-                            {
-                                element: '#tour-calendar-grid',
-                                popover: {
-                                    title: 'Interactive Grid',
-                                    description: 'This is the main calendar. Clicking on any day with an event will pop up a detailed list of all protocols and deadlines occurring on that date.',
-                                    side: "top",
-                                    align: 'start'
-                                }
-                            },
-                            {
-                                element: '#tour-calendar-sidebar',
-                                popover: {
-                                    title: 'Monthly Summary',
-                                    description: 'A quick breakdown of the month\'s schedule. Scroll down here to see an organized list of all upcoming assignments for the current month.',
-                                    side: "left",
-                                    align: 'start'
-                                }
-                            },
-                            {
-                                // Floating popover
-                                popover: {
-                                    title: 'Next Stop: Invitations',
-                                    description: 'Now that you know how to track your deadlines, let\'s see what happens when you get assigned a new protocol to review. Click below to continue.',
-                                    side: "bottom",
-                                    align: 'center',
-                                    doneBtnText: 'Next Page →' // Sends them to rev_invitations
-                                }
+                        {
+                            element: '#tour-calendar-rules',
+                            popover: {
+                                title: 'Key Dates',
+                                description: 'Committee meeting days and application cut-off dates are automatically generated and marked on the calendar for your reference.',
+                                side: "bottom",
+                                align: 'start'
                             }
-                        ]
-                    });
+                        },
+                        {
+                            element: '#tour-calendar-filters',
+                            popover: {
+                                title: 'Filter Views',
+                                description: 'If the calendar looks cluttered, use these buttons to isolate specific statuses, like filtering to show only deadlines or applications waiting for your assessment.',
+                                side: "bottom",
+                                align: 'start'
+                            }
+                        },
+                        {
+                            element: '#tour-calendar-grid',
+                            popover: {
+                                title: 'Interactive Grid',
+                                description: 'This is the main calendar. Clicking on any day with an event will show a detailed list of all protocols and deadlines occurring on that date.',
+                                side: "top",
+                                align: 'start'
+                            }
+                        },
+                        {
+                            element: '#tour-calendar-sidebar',
+                            popover: {
+                                title: 'Monthly Summary',
+                                description: 'A quick breakdown of the month’s schedule. Scroll here to see an organized list of all upcoming assignments for the current month.',
+                                side: "left",
+                                align: 'start'
+                            }
+                        },
+                        {
+                            popover: {
+                                title: 'Next Stop: Invitations',
+                                description: 'Now that you know how to track your deadlines, let’s see what happens when you get assigned a new protocol to review.',
+                                side: "bottom",
+                                align: 'center',
+                                doneBtnText: 'Next Page →'
+                            }
+                        }
+                    ]
+                });
 
-                    tour.drive();
-                }
+                tour.drive();
             }
+
+            window.startPageTutorial = function () {
+                loadDriverThenRun(() => runReviewerCalendarTutorial(true));
+            };
+
+            loadDriverThenRun(() => runReviewerCalendarTutorial(false));
         });
-        </script>
+    </script>
 @endpush

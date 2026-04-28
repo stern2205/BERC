@@ -850,54 +850,71 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 
-// ───────────────── TUTORIAL LOGIC (REVIEWER INVITATIONS) ─────────────────
-document.addEventListener('alpine:initialized', () => {
-    // Dynamic Injection: Ensure Driver.js is loaded
-    if (typeof window.driver === 'undefined') {
-        const css = document.createElement('link');
-        css.rel = 'stylesheet';
-        css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
-        document.head.appendChild(css);
+    document.addEventListener('alpine:initialized', () => {
 
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = initTour;
-        document.head.appendChild(script);
-    } else {
-        initTour();
-    }
+        function loadDriverThenRun(callback) {
+            if (typeof window.driver !== 'undefined') {
+                callback();
+                return;
+            }
 
-    function initTour() {
-        const isFirstLogin = @json(auth()->user()->is_first_login);
-        const userId = @json(auth()->id());
-        const storageKey = 'berc_tutorial_step_' + userId;
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
+            document.head.appendChild(css);
 
-        if (!isFirstLogin) {
-            localStorage.removeItem(storageKey);
-            return;
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
+            script.onload = callback;
+            document.head.appendChild(script);
         }
 
-        const tourState = localStorage.getItem(storageKey);
+        function runReviewerInvitationsTutorial(manual = false) {
+            const isFirstLogin = @json(auth()->user()->is_first_login);
+            const userId = @json(auth()->id());
+            const storageKey = 'berc_tutorial_step_' + userId;
 
-        if (tourState === 'rev_invitations') {
+            if (manual) {
+                localStorage.removeItem(storageKey);
+                localStorage.setItem(storageKey, 'rev_invitations');
+            }
+
+            if (!manual && !isFirstLogin) {
+                localStorage.removeItem(storageKey);
+                return;
+            }
+
+            const tourState = localStorage.getItem(storageKey);
+
+            if (tourState === 'rev_invitations_manual_skip') {
+                localStorage.removeItem(storageKey);
+                return;
+            }
+
+            if (!manual && tourState !== 'rev_invitations') {
+                return;
+            }
+
             const driver = window.driver.js.driver;
-
-            // Gain access to Alpine's state variables so we can force open the modal
             const alpineComponent = Alpine.$data(document.querySelector('[x-data="protocolEvaluation"]'));
 
             const tour = driver({
                 showProgress: true,
-                allowClose: false,
+                allowClose: manual ? true : false,
                 overlayColor: 'rgba(33, 60, 113, 0.75)',
-                nextBtnText: 'Next &rarr;',
-                prevBtnText: '&larr; Back',
+                nextBtnText: 'Next →',
+                prevBtnText: '← Back',
 
                 onDestroyStarted: () => {
                     if (!tour.hasNextStep()) {
-                        // Clean up mock modal before leaving
                         alpineComponent.closePreviewModal();
 
-                        localStorage.setItem(storageKey, 'rev_assessment');
+                        if (manual) {
+                            localStorage.setItem(storageKey, 'rev_assessment_manual_skip');
+                        } else {
+                            localStorage.setItem(storageKey, 'rev_assessment');
+                        }
+
                         tour.destroy();
                         window.location.href = "{{ route('reviewer.assessment') ?? '/reviewer/assessment' }}";
                     } else {
@@ -914,23 +931,33 @@ document.addEventListener('alpine:initialized', () => {
                             side: "top",
                             align: 'start',
                             onNextClick: () => {
-                                // ── OPEN THE MOCK MODAL ──
                                 alpineComponent.appDetails = {
                                     id: '2026-MOCK-001',
                                     title: 'Effects of AI on System Architecture (Tutorial)',
                                     researcher: 'Dr. Jane Doe'
                                 };
+
                                 alpineComponent.loadedDocs = {
-                                    activeBasic: [{ id: 'doc-mock-1', label: 'Study Protocol', desc: 'Review requested', isRevised: false }],
+                                    activeBasic: [
+                                        {
+                                            id: 'doc-mock-1',
+                                            label: 'Study Protocol',
+                                            desc: 'Review requested',
+                                            isRevised: false
+                                        }
+                                    ],
                                     activeSupp: [],
                                     legacy: []
                                 };
+
                                 alpineComponent.activeDocKey = 'appform';
                                 alpineComponent.activeDocTitle = 'Application Form Preview';
                                 alpineComponent.isLoadingDocs = false;
 
-                                // Open it using a dummy protocol object that triggers the bypass logic we added
-                                alpineComponent.openPreviewModal({ is_mock: true, protocol_code: 'MOCK-01' });
+                                alpineComponent.openPreviewModal({
+                                    is_mock: true,
+                                    protocol_code: 'MOCK-01'
+                                });
 
                                 tour.moveNext();
                             }
@@ -940,7 +967,7 @@ document.addEventListener('alpine:initialized', () => {
                         element: '#tour-protocol-info',
                         popover: {
                             title: '1. Protocol Details',
-                            description: 'Here you can view the basic study information and select any of the uploaded documents (like the Study Protocol) to read them.',
+                            description: 'Here you can view the basic study information and select any of the uploaded documents, like the Study Protocol, to read them.',
                             side: "right",
                             align: 'start'
                         }
@@ -958,21 +985,19 @@ document.addEventListener('alpine:initialized', () => {
                         element: '#tour-modal-footer',
                         popover: {
                             title: '3. Accept or Decline',
-                            description: 'Once you evaluate the request, you must click either "Accept" to begin your formal review, or "Decline" if you have a conflict of interest or lack bandwidth.',
+                            description: 'Once you evaluate the request, you must click either Accept to begin your formal review, or Decline if you have a conflict of interest or lack bandwidth.',
                             side: "top",
                             align: 'center',
                             onNextClick: () => {
-                                // Clean up mock modal before floating popover
                                 alpineComponent.closePreviewModal();
                                 tour.moveNext();
                             }
                         }
                     },
                     {
-                        // Floating popover
                         popover: {
                             title: 'Next Stop: Protocol Assessment',
-                            description: 'If you click "Accept", the protocol moves to your Assessment page where you conduct your actual review. Let\'s go there next.',
+                            description: 'If you click Accept, the protocol moves to your Assessment page where you conduct your actual review. Let’s go there next.',
                             side: "bottom",
                             align: 'center',
                             doneBtnText: 'Next Page →'
@@ -983,7 +1008,12 @@ document.addEventListener('alpine:initialized', () => {
 
             tour.drive();
         }
-    }
-});
+
+        window.startPageTutorial = function () {
+            loadDriverThenRun(() => runReviewerInvitationsTutorial(true));
+        };
+
+        loadDriverThenRun(() => runReviewerInvitationsTutorial(false));
+    });
 </script>
 @endsection

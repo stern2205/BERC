@@ -337,20 +337,44 @@
                                         <div class="flex justify-between items-start gap-3 border border-gray-100 rounded-md bg-gray-50 px-2 py-1.5">
                                             <div class="min-w-0 text-left pr-2 flex-1">
                                                 <div class="text-[10px] font-bold text-gray-700" x-text="rev.name"></div>
+
                                                 <div class="text-[10px] text-gray-500 font-semibold mt-0.5">
-                                                    <span x-text="getReviewerStatusDateLabel(rev.status, protocol, rev, 'reassignment') + ': '"></span><span x-text="getReviewerStatusDate(protocol, rev, 'reassignment')"></span>
+                                                    <span x-text="getReviewerStatusDateLabel(rev.status, protocol, rev, 'reassignment') + ': '"></span>
+                                                    <span x-text="getReviewerStatusDate(protocol, rev, 'reassignment')"></span>
                                                 </div>
-                                                    <div class="text-[10px] font-semibold"
-                                                        :class="['Expired', 'Declined'].includes(getReviewerDisplayStatus(protocol, rev, 'reassignment')) ? 'text-red-600' : 'text-gray-400'"
-                                                        x-text="getReviewerStatusSubtext(protocol, rev, 'reassignment')"></div>                                            </div>
+
+                                                <div class="text-[10px] font-semibold"
+                                                    :class="getReviewerDisplayStatus(protocol, rev, 'reassignment') === 'Submitted'
+                                                        ? 'text-blue-600'
+                                                        : ['Expired', 'Declined'].includes(getReviewerDisplayStatus(protocol, rev, 'reassignment'))
+                                                            ? 'text-red-600'
+                                                            : 'text-gray-400'"
+                                                    x-text="getReviewerStatusSubtext(protocol, rev, 'reassignment')">
+                                                </div>
+                                            </div>
+
                                             <div class="flex flex-col items-end gap-1.5 shrink-0 ml-auto pl-5">
+
                                                 <span class="text-[10px] font-black tracking-wide px-2 py-0.5 rounded border min-w-[92px] text-center"
-                                                      :class="getReviewerStatusBadgeClass(rev.status, protocol, rev, 'reassignment')"
-                                                      x-text="getReviewerDisplayStatus(protocol, rev, 'reassignment')"></span>
+                                                    :class="getReviewerStatusBadgeClass(rev.status, protocol, rev, 'reassignment')"
+                                                    x-text="getReviewerDisplayStatus(protocol, rev, 'reassignment')">
+                                                </span>
+
+                                                <div x-show="getReviewerDisplayStatus(protocol, rev, 'reassignment') === 'Submitted'"
+                                                    class="text-[9px] font-bold text-blue-600 text-right leading-tight">
+                                                    Assessment Submitted
+                                                </div>
+
+                                                <div x-show="getReviewerDisplayStatus(protocol, rev, 'reassignment') === 'Accepted'"
+                                                    class="text-[9px] font-bold text-blue-600 text-right leading-tight"
+                                                    x-text="getReviewCountdown(protocol, rev)">
+                                                </div>
+
                                                 <div x-show="isReviewerNoResponse(protocol, rev)"
-                                                     class="text-[9px] font-bold text-red-600 text-right leading-tight">
+                                                    class="text-[9px] font-bold text-red-600 text-right leading-tight">
                                                     No response in 24 hours
                                                 </div>
+
                                             </div>
                                         </div>
                                     </template>
@@ -440,7 +464,10 @@
                                                     <div x-show="getReviewerDisplayStatus(protocol, rev, 'awaiting') === 'Pending'"
                                                         class="text-[9px] font-bold text-orange-600 text-center leading-tight"
                                                         x-text="getReviewerPendingCountdown(protocol, rev, 'awaiting')"></div>
-
+                                                    <div x-show="getReviewerDisplayStatus(protocol, rev, 'awaiting') === 'Submitted'"
+                                                        class="text-[9px] font-bold text-blue-600 text-center leading-tight mt-0.5">
+                                                        Assessment Submitted
+                                                    </div>
                                                     <div x-show="getReviewerDisplayStatus(protocol, rev, 'awaiting') === 'Accepted'"
                                                         class="text-[9px] font-bold text-center leading-tight mt-0.5"
                                                         :class="isReviewOverdue(protocol, rev) ? 'text-red-600' : 'text-blue-600'"
@@ -978,14 +1005,17 @@
                         </div>
                     </div>
 
-                    <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 p-4 flex justify-end" x-show="!activeDocKey && (classification === 'Expedited' || classification === 'Full Board')">
-                        <button id="tour-confirm-evaluation-btn" class="bg-red-600 text-white font-bold px-5 py-2 rounded uppercase text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    <div class="absolute inset-x-0 bottom-0 bg-white border-t border-gray-200 px-4 py-3 flex justify-end z-20"
+                        x-show="!activeDocKey && (classification === 'Expedited' || classification === 'Full Board')">
+
+                        <button id="tour-confirm-evaluation-btn"
+                                class="bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2 rounded uppercase text-xs disabled:opacity-50 disabled:cursor-not-allowed transition"
                                 @click="handleConfirmEvaluation()"
                                 :disabled="!canConfirmEvaluation">
                             Confirm Assignment
                         </button>
-                    </div>
 
+                    </div>
                 </div>
             </div>
         </div>
@@ -1305,7 +1335,7 @@ document.addEventListener('alpine:init', () => {
         // ADD: Logic for 10 (Expedited) vs 21 (Full Board) days
         getDaysAllowed(classification) {
             if (classification === 'Expedited') return 10;
-            if (classification === 'Full Board') return 21;
+            if (classification === 'Full Board') return 20;
             return 0;
         },
 
@@ -1401,7 +1431,6 @@ document.addEventListener('alpine:init', () => {
                 const response = await fetch(`/secretariat/applications/${protocol.id}`);
                 if (response.ok) {
                     const data = await response.json();
-                    console.log("🚀 FRESH API DATA:", data);
 
                     this.appDetails = {
                         id: data.protocol_code,
@@ -1482,7 +1511,6 @@ document.addEventListener('alpine:init', () => {
 
                     // TRIGGER ALPINE REACTIVITY ALL AT ONCE
                     this.loadedDocs = tempDocs;
-                    console.log("✅ PROCESSED DOCS FOR UI:", this.loadedDocs);
 
                     this.viewDocument('appform');
                 } else {
@@ -1630,10 +1658,13 @@ document.addEventListener('alpine:init', () => {
         getReviewerAssignedDate(protocol, reviewer) { return this.formatDateOnly(reviewer?.dateAssigned || protocol?.dateAssigned || protocol?.date || 'N/A'); },
         normalizeReviewerStatus(status) {
             const raw = String(status || '').trim().toLowerCase();
+
             if (raw === 'accepted') return 'Accepted';
             if (raw === 'declined') return 'Declined';
             if (raw === 'expired') return 'Expired';
+            if (raw === 'rejected') return 'Rejected';
             if (raw === 'pending') return 'Pending';
+
             return 'Pending';
         },
         getReviewerPendingDeadlineMs(protocol, reviewer) {
@@ -1654,6 +1685,13 @@ document.addEventListener('alpine:init', () => {
         getReviewerDisplayStatus(protocol, reviewer, context = 'default') {
             const normalized = this.normalizeReviewerStatus(reviewer?.status);
 
+            if (
+                reviewer?.assessmentStatus === 'submitted' ||
+                reviewer?.done === 'Done'
+            ) {
+                return 'Submitted';
+            }
+
             if (normalized === 'Expired') return 'Expired';
             if (normalized === 'Declined') return 'Declined';
 
@@ -1664,22 +1702,39 @@ document.addEventListener('alpine:init', () => {
             return normalized;
         },
         getReviewerStatusTextClass(status, protocol = null, reviewer = null, context = 'default') {
-            const normalized = reviewer ? this.getReviewerDisplayStatus(protocol, reviewer, context) : this.normalizeReviewerStatus(status);
+            const normalized = reviewer
+                ? this.getReviewerDisplayStatus(protocol, reviewer, context)
+                : this.normalizeReviewerStatus(status);
+
+            if (normalized === 'Submitted') return 'text-blue-700';
             if (normalized === 'Accepted') return 'text-green-700';
             if (normalized === 'Declined' || normalized === 'Expired') return 'text-red-600';
+
             return 'text-orange-600';
         },
+
         getReviewerStatusBadgeClass(status, protocol = null, reviewer = null, context = 'default') {
-            const normalized = reviewer ? this.getReviewerDisplayStatus(protocol, reviewer, context) : this.normalizeReviewerStatus(status);
+            const normalized = reviewer
+                ? this.getReviewerDisplayStatus(protocol, reviewer, context)
+                : this.normalizeReviewerStatus(status);
+
+            if (normalized === 'Submitted') return 'bg-blue-50 text-blue-700 border-blue-200';
             if (normalized === 'Accepted') return 'bg-green-50 text-green-700 border-green-200';
             if (normalized === 'Declined' || normalized === 'Expired') return 'bg-red-50 text-red-600 border-red-200';
+
             return 'bg-orange-50 text-orange-600 border-orange-200';
         },
+
         getReviewerStatusDateLabel(status, protocol = null, reviewer = null, context = 'default') {
-            const normalized = reviewer ? this.getReviewerDisplayStatus(protocol, reviewer, context) : this.normalizeReviewerStatus(status);
+            const normalized = reviewer
+                ? this.getReviewerDisplayStatus(protocol, reviewer, context)
+                : this.normalizeReviewerStatus(status);
+
+            if (normalized === 'Submitted') return 'Date Submitted';
             if (normalized === 'Accepted') return 'Date Accepted';
             if (normalized === 'Declined') return 'Date Declined';
             if (normalized === 'Expired') return 'Date Expired';
+
             return 'Date Assigned';
         },
         getReviewerStatusDateSource(protocol, reviewer, context = 'default') {
@@ -1861,33 +1916,66 @@ document.addEventListener('alpine:init', () => {
             return this.selectedExpiredReviewers.some(name => this.normalizeReviewerName(name) === reviewerName);
         },
 
+        isRejected(reviewer) {
+            if (!reviewer) return false;
+
+            const rejected = Array.isArray(this.selectedProtocol?.rejectedReviewers)
+                ? this.selectedProtocol.rejectedReviewers
+                : [];
+
+            const reviewerId = Number(reviewer.id);
+            const reviewerName = this.normalizeReviewerName(reviewer.name);
+
+            return rejected.some(r => {
+                const rejectedId = Number(r.id);
+                const rejectedName = this.normalizeReviewerName(r.name);
+
+                return rejectedId === reviewerId || rejectedName === reviewerName;
+            });
+        },
+
         getReviewersByType(type) {
             return this.allReviewers
                 .filter(r => r.type === type && !this.assignments.some(a => a.id === r.id))
                 .map(r => {
                     const hasDeclined = this.isDeclined(r);
                     const hasExpired = this.isNoResponse(r);
-                    const isOverQuota = (r.evaluations?.length || 0) >= 3;
-                    const disabled = hasDeclined || hasExpired || isOverQuota;
+                    const hasRejected = this.isRejected(r);
+                    const isOverQuota = !hasRejected && (r.evaluations?.length || 0) >= 3;
+
+                    const disabled = hasRejected|| hasDeclined || hasExpired || isOverQuota;
+
                     let reason = '';
-                    if (hasDeclined) reason = 'Declined';
+                    if (hasRejected) reason = 'Rejected';
+                    else if (hasDeclined) reason = 'Declined';
                     else if (hasExpired) reason = 'Expired';
                     else if (isOverQuota) reason = 'Quota Full';
-                    return { ...r, isDisabled: disabled, disabledReason: reason };
+
+                    return {
+                        ...r,
+                        isDisabled: disabled,
+                        disabledReason: reason
+                    };
                 });
         },
+
         get availableConsultants() {
             return this.externalConsultants
                 .filter(c => !this.assignments.some(a => a.id === c.id))
                 .map(c => {
+                    const hasRejected = this.isRejected(c);
                     const hasDeclined = this.isDeclined(c);
                     const hasExpired = this.isNoResponse(c);
-                    const isOverQuota = (c.evaluations?.length || 0) >= 3;
-                    const disabled = hasDeclined || hasExpired || isOverQuota;
+                    const isOverQuota = !hasRejected && (c.evaluations?.length || 0) >= 3;
+
+                    const disabled = hasRejected || hasDeclined || hasExpired || isOverQuota;
+
                     let reason = '';
-                    if (hasDeclined) reason = 'Declined';
+                    if (hasRejected) reason = 'Rejected';
+                    else if (hasDeclined) reason = 'Declined';
                     else if (hasExpired) reason = 'Expired';
                     else if (isOverQuota) reason = 'Quota Full';
+
                     return { ...c, isDisabled: disabled, disabledReason: reason };
                 });
         },
@@ -2147,10 +2235,15 @@ document.addEventListener('alpine:init', () => {
 });
 </script>
 
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
@@ -2171,27 +2264,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = initProtocolEvaluationTour;
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initProtocolEvaluationTour();
     }
 
-    function initProtocolEvaluationTour(retries = 0) {
+    function runProtocolEvaluationTutorial(manual = false, retries = 0) {
         const userId = @json(auth()->id());
         const isFirstLogin = @json(auth()->user()->is_first_login);
         const storageKey = 'berc_tutorial_step_' + userId;
-        const urlParams = new URLSearchParams(window.location.search);
-        const forceTour = urlParams.get('tour') === '1';
         const tourState = localStorage.getItem(storageKey);
 
-        if (!isFirstLogin && !forceTour) {
+        if (manual) {
+            localStorage.removeItem(storageKey);
+            localStorage.setItem(storageKey, 'secretariat_evaluation');
+        }
+
+        if (!manual && !isFirstLogin) {
             localStorage.removeItem(storageKey);
             return;
         }
 
-        // FIXED STRING MISMATCH: Looking for 'secretariat_evaluation'
-        if (tourState !== 'secretariat_evaluation' && !forceTour) {
+        if (!manual && tourState !== 'secretariat_evaluation') {
             return;
         }
 
@@ -2202,7 +2295,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!rootEl || !alpine) {
             if (retries < 40) {
-                setTimeout(() => initProtocolEvaluationTour(retries + 1), 250);
+                setTimeout(() => runProtocolEvaluationTutorial(manual, retries + 1), 250);
             }
             return;
         }
@@ -2229,11 +2322,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const waitFor = async (selector, timeout = 4000) => {
             const start = Date.now();
+
             while (Date.now() - start < timeout) {
                 const el = document.querySelector(selector);
-                if (el && el.offsetParent !== null) return el;
+
+                if (el && el.offsetParent !== null) {
+                    return el;
+                }
+
                 await wait(120);
             }
+
             return null;
         };
 
@@ -2253,14 +2352,22 @@ document.addEventListener('DOMContentLoaded', () => {
             overlay.style.display = 'flex';
             classView.style.display = mode === 'classification' ? 'block' : 'none';
             assignView.style.display = mode === 'assignment' ? 'block' : 'none';
-            if (consultantForm) consultantForm.style.display = 'none';
+
+            if (consultantForm) {
+                consultantForm.style.display = 'none';
+            }
+
             setReviewerTab('panel');
             await wait(180);
         };
 
         const closeMock = async () => {
             overlay.style.display = 'none';
-            if (consultantForm) consultantForm.style.display = 'none';
+
+            if (consultantForm) {
+                consultantForm.style.display = 'none';
+            }
+
             await wait(180);
         };
 
@@ -2268,6 +2375,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (consultantForm) {
                 consultantForm.style.display = show ? 'block' : 'none';
             }
+
             await wait(150);
         };
 
@@ -2292,30 +2400,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tour = driver({
             showProgress: true,
-            allowClose: false,
+            allowClose: manual ? true : false,
             overlayColor: 'rgba(33, 60, 113, 0.75)',
             nextBtnText: 'Next →',
             prevBtnText: '← Back',
 
             onDestroyStarted: () => {
                 if (!tour.hasNextStep()) {
+
+                    if (manual) {
+                        shouldRedirectToAssessmentForms = true;
+                        localStorage.setItem(storageKey, 'secretariat_assessment_manual_skip');
+                        tour.destroy();
+                        window.location.href = "{{ url('/secretariat/assessment') }}";
+                        return;
+                    }
+
                     shouldRedirectToAssessmentForms = true;
                     localStorage.setItem(storageKey, 'secretariat_assessment');
                     tour.destroy();
-
                     window.location.href = "{{ url('/secretariat/assessment') }}";
-                } else {s
+
+                } else {
                     tour.destroy();
-                }
-            },
-
-            onDestroyed: () => {
-                overlay.style.display = 'none';
-                if (consultantForm) consultantForm.style.display = 'none';
-                window.__protocolEvaluationTourStarted = false;
-
-                if (!shouldRedirectToAssessmentForms && localStorage.getItem(storageKey) === 'secretariat_evaluation') {
-                    localStorage.setItem(storageKey, 'done');
                 }
             },
 
@@ -2586,7 +2693,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 },
                 {
-                    // Floating popover
                     popover: {
                         title: 'Next Step: Assessment Forms',
                         description: 'Now let’s proceed to Assessment Forms where reviewer evaluations are handled.',
@@ -2602,6 +2708,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tour.drive();
         }, 300);
     }
+
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runProtocolEvaluationTutorial(true));
+    };
+
+    loadDriverThenRun(() => runProtocolEvaluationTutorial(false));
 });
 </script>
 @endsection

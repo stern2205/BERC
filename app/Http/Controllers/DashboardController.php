@@ -107,7 +107,7 @@ class DashboardController extends Controller
             foreach ($reviewers as $rev) {
                 $declinedCount = DB::table('application_reviewer')
                     ->where('reviewer_id', $rev->id)
-                    ->where('status', 'Declined')
+                    ->where('status', 'Rejected')
                     ->count();
 
                 $assessedCount = DB::table('application_reviewer')

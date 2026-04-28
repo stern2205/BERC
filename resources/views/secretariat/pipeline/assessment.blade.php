@@ -1029,8 +1029,8 @@ document.addEventListener('alpine:init', () => {
         getDaysAllowed(classification) {
             const classf = classification || 'Full Board';
             if (classf === 'Expedited') return 10;
-            if (classf === 'Full Board') return 21;
-            return 21;
+            if (classf === 'Full Board') return 20;
+            return 0;
         },
 
         getReviewDeadlineMs(protocol, reviewer) {
@@ -1299,7 +1299,13 @@ document.addEventListener('alpine:init', () => {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
@@ -1307,26 +1313,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const styleOverride = document.createElement('style');
         styleOverride.innerHTML = `
-            .driver-popover { font-family: 'Inter', sans-serif !important; border-radius: 12px !important; border: 1px solid #E5E7EB !important; padding: 20px !important; }
-            .driver-popover-title { color: #213C71 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; font-size: 14px !important; }
-            .driver-popover-description { color: #6B7280 !important; font-weight: 500 !important; font-size: 12px !important; margin-top: 8px !important; line-height: 1.5 !important; }
-            .driver-popover-footer button { border-radius: 8px !important; font-weight: 700 !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; padding: 8px 12px !important; }
-            .driver-popover-next-btn { background-color: #D32F2F !important; color: white !important; border: none !important; text-shadow: none !important; transition: all 0.2s ease !important; }
-            .driver-popover-next-btn:hover { background-color: #b91c1c !important; }
-            .driver-popover-prev-btn { background-color: #F3F4F6 !important; color: #4B5563 !important; border: none !important; }
-            .driver-popover-prev-btn:hover { background-color: #E5E7EB !important; }
+            .driver-popover { font-family:'Inter',sans-serif!important;border-radius:12px!important;border:1px solid #E5E7EB!important;padding:20px!important; }
+            .driver-popover-title { color:#213C71!important;font-weight:900!important;text-transform:uppercase!important;letter-spacing:.05em!important;font-size:14px!important; }
+            .driver-popover-description { color:#6B7280!important;font-weight:500!important;font-size:12px!important;margin-top:8px!important;line-height:1.5!important; }
+            .driver-popover-footer button { border-radius:8px!important;font-weight:700!important;font-size:11px!important;text-transform:uppercase!important;letter-spacing:.05em!important;padding:8px 12px!important; }
+            .driver-popover-next-btn { background:#D32F2F!important;color:white!important;border:none!important;text-shadow:none!important; }
+            .driver-popover-next-btn:hover { background:#b91c1c!important; }
+            .driver-popover-prev-btn { background:#F3F4F6!important;color:#4B5563!important;border:none!important; }
+            .driver-popover-prev-btn:hover { background:#E5E7EB!important; }
         `;
         document.head.appendChild(styleOverride);
 
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = () => initAssessmentTour();
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initAssessmentTour();
     }
 
-    function initAssessmentTour(retries = 0) {
+    function runAssessmentTutorial(manual = false, retries = 0) {
         const isFirstLogin = @json(auth()->check() ? auth()->user()->is_first_login : true);
         const userId = @json(auth()->id() ?? 1);
         const storageKey = 'berc_tutorial_step_' + userId;
@@ -1335,28 +1339,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const forceTour = urlParams.get('tour') === '1';
         let tourState = localStorage.getItem(storageKey);
 
-        if (forceTour) {
-            tourState = 'secretariat_assessment';
-            localStorage.setItem(storageKey, tourState);
-        }
-
-        if (!isFirstLogin && tourState !== 'secretariat_assessment' && !forceTour) {
+        if (tourState === 'secretariat_assessment_manual_skip') {
             localStorage.removeItem(storageKey);
             return;
         }
 
-        if (tourState !== 'secretariat_assessment') return;
+        if (manual || forceTour) {
+            tourState = 'secretariat_assessment';
+            localStorage.setItem(storageKey, tourState);
+        }
+
+        if (!manual && !forceTour && !isFirstLogin) {
+            localStorage.removeItem(storageKey);
+            return;
+        }
+
+        if (!manual && !forceTour && tourState !== 'secretariat_assessment') {
+            return;
+        }
+
         if (window.__assessmentTourStarted) return;
 
         const rootEl = document.getElementById('assessment-root');
         let alpine = null;
+
         try {
-            alpine = window.assessmentAlpine || rootEl?.__x?.$data || rootEl?._x_dataStack?.[0] || (window.Alpine ? window.Alpine.$data(rootEl) : null);
+            alpine = window.assessmentAlpine ||
+                rootEl?.__x?.$data ||
+                rootEl?._x_dataStack?.[0] ||
+                (window.Alpine ? window.Alpine.$data(rootEl) : null);
         } catch (e) {}
 
         if (!rootEl || !alpine || typeof window.driver === 'undefined') {
             if (retries < 40) {
-                setTimeout(() => initAssessmentTour(retries + 1), 250);
+                setTimeout(() => runAssessmentTutorial(manual, retries + 1), 250);
             } else {
                 console.error('Tutorial aborted: Could not hook into Alpine or Driver.js.');
             }
@@ -1370,16 +1386,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tour = driver({
             showProgress: true,
-            allowClose: false,
+            allowClose: manual ? true : false,
             overlayColor: 'rgba(33, 60, 113, 0.75)',
             nextBtnText: 'Next →',
             prevBtnText: '← Back',
 
             onDestroyStarted: () => {
                 if (!tour.hasNextStep()) {
+
                     localStorage.setItem(storageKey, 'secretariat_decision');
                     tour.destroy();
                     window.location.href = "{{ route('secretariat.decision') ?? url('/secretariat/decision') }}";
+
                 } else {
                     tour.destroy();
                 }
@@ -1460,6 +1478,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                             ]
                         });
+
                         await wait(350);
                     },
                     popover: {
@@ -1508,6 +1527,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tour.drive();
         }, 300);
     }
+
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runAssessmentTutorial(true));
+    };
+
+    loadDriverThenRun(() => runAssessmentTutorial(false));
 });
 </script>
 @endsection

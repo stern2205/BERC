@@ -636,6 +636,15 @@
             </div>
 
             <div class="flex items-center space-x-6 border-l border-gray-200 pl-6 py-4">
+                <button type="button"
+                        onclick="startManualTutorial()"
+                        class="flex items-center gap-2 transition-all hover:-translate-y-0.5 text-gray-500 hover:text-bsu-dark">
+                    <svg class="w-4 h-4 shrink-0 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.228 9c.549-1.165 1.823-2 3.272-2 1.933 0 3.5 1.343 3.5 3 0 1.305-.973 2.416-2.333 2.83-.727.221-1.167.874-1.167 1.67M12 18h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
+                    </svg>
+                    <span>VIEW TUTORIAL</span>
+                </button>
                 <a href="{{ route('settings') }}"
                 class="flex items-center gap-2 transition-all hover:-translate-y-0.5 {{ request()->routeIs('settings') ? 'text-bsu-dark font-black' : 'text-gray-500 hover:text-bsu-dark' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1585,6 +1594,61 @@
             tour.drive();
         }
     });
+</script>
+
+<script>
+function startManualTutorial() {
+    if (typeof window.driver === 'undefined') {
+        console.error("Driver.js is missing on the Payment Settings page!");
+        return;
+    }
+
+    const driver = window.driver.js.driver;
+
+    const tour = driver({
+        showProgress: true,
+        allowClose: true,
+        overlayColor: 'rgba(33, 60, 113, 0.75)',
+        nextBtnText: 'Next →',
+        prevBtnText: '← Back',
+
+        onDestroyStarted: () => {
+            tour.destroy();
+        },
+
+        steps: [
+            {
+                element: '#tour-payment-info',
+                popover: {
+                    title: 'Managing Payments',
+                    description: 'As a Secretary, you have full control over the payment methods displayed to researchers when they submit an application.',
+                    side: "bottom",
+                    align: 'start'
+                }
+            },
+            {
+                element: '#tour-payment-grid',
+                popover: {
+                    title: 'The Payment Grid',
+                    description: 'Here you can add new banks or e-wallets, edit existing account numbers, or temporarily toggle a method offline if a bank is undergoing maintenance.',
+                    side: "top",
+                    align: 'start'
+                }
+            },
+            {
+                popover: {
+                    title: 'Tutorial Complete 🎉',
+                    description: 'You have finished the Payment Settings tutorial.',
+                    side: "bottom",
+                    align: 'center',
+                    doneBtnText: 'Finish'
+                }
+            }
+        ]
+    });
+
+    tour.drive();
+}
 </script>
 
 </body>

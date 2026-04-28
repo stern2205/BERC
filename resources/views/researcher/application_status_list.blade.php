@@ -165,6 +165,23 @@
             </div>
 
             <div class="flex items-center space-x-6 border-l border-gray-200 pl-6 py-4">
+
+                <button type="button"
+                        onclick="restartStatusTutorial()"
+                        class="flex items-center gap-2 transition-all hover:-translate-y-0.5 text-gray-500 hover:text-bsu-dark">
+
+                    <svg class="w-4 h-4 shrink-0 text-brand-red"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8.228 9c.549-1.165 1.823-2 3.272-2 1.933 0 3.5 1.343 3.5 3 0 1.305-.973 2.416-2.333 2.83-.727.221-1.167.874-1.167 1.67M12 18h.01M12 3a9 9 0 100 18 9 9 0 000-18z"/>
+                    </svg>
+
+                    <span>VIEW TUTORIAL</span>
+                </button>
                 <a href="{{ route('settings') }}"
                 class="flex items-center gap-2 transition-all hover:-translate-y-0.5 {{ request()->routeIs('settings') ? 'text-bsu-dark font-black' : 'text-gray-500 hover:text-bsu-dark' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1644,6 +1661,88 @@ document.addEventListener('DOMContentLoaded', () => {
         tour.drive();
     }
 });
+</script>
+
+<script>
+function restartStatusTutorial() {
+    const userId = @json(auth()->id());
+    const storageKey = 'berc_tutorial_step_' + userId;
+
+    // erase old progress
+    localStorage.removeItem(storageKey);
+
+    // set current page as fresh start
+    localStorage.setItem(storageKey, 'status');
+
+    const driver = window.driver.js.driver;
+
+    const tour = driver({
+        showProgress: true,
+        allowClose: true,
+        overlayColor: 'rgba(33, 60, 113, 0.75)',
+        nextBtnText: 'Next →',
+        prevBtnText: '← Back',
+
+        onDestroyStarted: () => {
+            if (!tour.hasNextStep()) {
+                localStorage.setItem(storageKey, 'history');
+                tour.destroy();
+                window.location.href = "{{ route('application.history') }}";
+            } else {
+                tour.destroy();
+            }
+        },
+
+        steps: [
+            {
+                element: '#tour-status-tabs',
+                popover: {
+                    title: 'Track Your Progress',
+                    description: 'This page shows all active protocols currently under review.',
+                    side: "bottom",
+                    align: "start"
+                }
+            },
+            {
+                element: '#tab-application',
+                popover: {
+                    title: 'Application Status',
+                    description: 'Submitted protocols appear here while under evaluation.',
+                    side: "bottom",
+                    align: "center"
+                }
+            },
+            {
+                element: '#tab-resubmission',
+                popover: {
+                    title: 'Resubmission Status',
+                    description: 'Protocols needing revisions move here.',
+                    side: "bottom",
+                    align: "center"
+                }
+            },
+            {
+                popover: {
+                    title: 'Detailed Timeline',
+                    description: 'Click a protocol row anytime to open full progress details.',
+                    side: "top",
+                    align: "center"
+                }
+            },
+            {
+                popover: {
+                    title: 'Next Page',
+                    description: 'Finished applications are stored in Application History.',
+                    side: "bottom",
+                    align: "center",
+                    doneBtnText: 'Next Page →'
+                }
+            }
+        ]
+    });
+
+    tour.drive(); // ALWAYS starts at step 1
+}
 </script>
 </body>
 </html>

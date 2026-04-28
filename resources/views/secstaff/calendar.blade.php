@@ -321,6 +321,15 @@ $currentMonthNum = (int)date('n');
             </div>
 
             <div class="flex items-center space-x-6 border-l border-gray-200 pl-6 py-4">
+                <button type="button"
+                        onclick="startManualTutorial()"
+                        class="flex items-center gap-2 transition-all hover:-translate-y-0.5 text-gray-500 hover:text-bsu-dark">
+                    <svg class="w-4 h-4 shrink-0 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.228 9c.549-1.165 1.823-2 3.272-2 1.933 0 3.5 1.343 3.5 3 0 1.305-.973 2.416-2.333 2.83-.727.221-1.167.874-1.167 1.67M12 18h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
+                    </svg>
+                    <span>VIEW TUTORIAL</span>
+                </button>
                 <a href="{{ route('settings') }}"
                 class="flex items-center gap-2 transition-all hover:-translate-y-0.5 {{ request()->routeIs('settings') ? 'text-bsu-dark font-black' : 'text-gray-500 hover:text-bsu-dark' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -418,8 +427,6 @@ $currentMonthNum = (int)date('n');
 </script>
 
 <div class="max-w-7xl mx-auto px-4 py-4">
-
-    <div class="max-w-7xl mx-auto px-4 py-4">
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative mb-4">
             <div class="absolute inset-0 z-0">
@@ -1322,5 +1329,92 @@ $currentMonthNum = (int)date('n');
         buildDropdowns();
         renderCalendar();
     </script>
+
+<script>
+function startManualTutorial() {
+    if (typeof window.driver === 'undefined') {
+        console.error("Driver.js is missing on the Calendar page!");
+        return;
+    }
+
+    const driver = window.driver.js.driver;
+
+    const tour = driver({
+        showProgress: true,
+        allowClose: true,
+        overlayColor: 'rgba(33, 60, 113, 0.75)',
+        nextBtnText: 'Next →',
+        prevBtnText: '← Back',
+
+        onDestroyStarted: () => {
+            if (!tour.hasNextStep()) {
+                tour.destroy();
+                window.location.href = "{{ route('secstaff.history') }}";
+            } else {
+                tour.destroy();
+            }
+        },
+
+        steps: [
+            {
+                element: '#tour-calendar-legend',
+                popover: {
+                    title: 'Visual Tracking',
+                    description: 'Every protocol is color-coded based on its current status. This allows you to instantly see who is currently holding up the review process.',
+                    side: "bottom",
+                    align: 'start'
+                }
+            },
+            {
+                element: '#tour-calendar-rules',
+                popover: {
+                    title: 'Key Dates',
+                    description: 'Committee meeting days and application cut-off dates are automatically generated and marked on the calendar for you.',
+                    side: "bottom",
+                    align: 'start'
+                }
+            },
+            {
+                element: '#tour-calendar-filters',
+                popover: {
+                    title: 'Filter Views',
+                    description: 'Too much clutter? Use these buttons to isolate specific statuses—like filtering to show only the applications currently waiting at your desk.',
+                    side: "bottom",
+                    align: 'start'
+                }
+            },
+            {
+                element: '#tour-calendar-grid',
+                popover: {
+                    title: 'Interactive Grid',
+                    description: 'This is the main calendar. Clicking on any day with an event will show a detailed list of all protocols and deadlines occurring on that date.',
+                    side: "right",
+                    align: 'start'
+                }
+            },
+            {
+                element: '#tour-calendar-sidebar',
+                popover: {
+                    title: 'Monthly Summary',
+                    description: 'A quick breakdown of the month’s workload. Scroll here to see an organized list of upcoming tasks.',
+                    side: "left",
+                    align: 'start'
+                }
+            },
+            {
+                popover: {
+                    title: 'Next Stop: History Hub',
+                    description: 'Once applications are finalized, they move to the archives. Let’s continue to the History page.',
+                    side: "bottom",
+                    align: 'center',
+                    doneBtnText: 'Next Page →'
+                }
+            }
+        ]
+    });
+
+    tour.drive();
+}
+</script>
 </body>
 </html>

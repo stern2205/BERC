@@ -373,6 +373,39 @@
     </div>
 </div>
 
+<div x-show="notificationOpen"
+     x-transition
+     style="display:none;"
+     class="fixed bottom-6 right-6 z-[2000] text-white p-4 rounded-xl shadow-2xl flex items-center gap-4 border"
+     :class="notificationType === 'error'
+        ? 'bg-red-700 border-red-400'
+        : 'bg-bsu-dark border-blue-400'">
+
+    <div class="text-white rounded-full p-1.5 flex items-center justify-center"
+         :class="notificationType === 'error' ? 'bg-red-500' : 'bg-green-500'">
+        <svg x-show="notificationType !== 'error'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+        </svg>
+
+        <svg x-show="notificationType === 'error'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+    </div>
+
+    <div>
+        <p class="text-[10px] font-black uppercase tracking-widest"
+           :class="notificationType === 'error' ? 'text-red-100' : 'text-blue-200'"
+           x-text="notificationTitle"></p>
+
+        <p class="text-xs font-bold mt-0.5" x-text="notificationMessage"></p>
+    </div>
+
+    <button @click="notificationOpen = false"
+            class="ml-4 text-white/50 hover:text-white border-none bg-transparent cursor-pointer text-xl leading-none">
+        &times;
+    </button>
+</div>
+
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('assessmentData', (initialData = []) => ({
@@ -417,6 +450,25 @@ document.addEventListener('alpine:init', () => {
             'technical_review_approval', 'curriculum_vitae', 'informed_consent',
             'manuscript'
         ],
+
+        notificationOpen: false,
+        notificationTitle: '',
+        notificationMessage: '',
+        notificationType: 'success',
+        notificationTimer: null,
+
+        showNotification(title, message, type = 'success') {
+            this.notificationTitle = title;
+            this.notificationMessage = message;
+            this.notificationType = type;
+            this.notificationOpen = true;
+
+            if (this.notificationTimer) clearTimeout(this.notificationTimer);
+
+            this.notificationTimer = setTimeout(() => {
+                this.notificationOpen = false;
+            }, 3500);
+        },
 
         init() {
             window.revisionValidationAlpine = this;
@@ -656,7 +708,13 @@ document.addEventListener('alpine:init', () => {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
@@ -677,13 +735,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = () => initRevisionValidationTour();
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initRevisionValidationTour();
     }
 
-    function initRevisionValidationTour(retries = 0) {
+    function runRevisionValidationTutorial(manual = false, retries = 0) {
         const isFirstLogin = @json(auth()->check() ? auth()->user()->is_first_login : true);
         const userId = @json(auth()->id() ?? 1);
         const storageKey = 'berc_tutorial_step_' + userId;
@@ -692,28 +748,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const forceTour = urlParams.get('tour') === '1';
         let tourState = localStorage.getItem(storageKey);
 
-        if (forceTour) {
-            tourState = 'secretariat_revision_validation';
-            localStorage.setItem(storageKey, tourState);
-        }
-
-        if (!isFirstLogin && tourState !== 'secretariat_revision_validation' && !forceTour) {
+        if (tourState === 'secretariat_revision_validation_manual_skip') {
             localStorage.removeItem(storageKey);
             return;
         }
 
-        if (tourState !== 'secretariat_revision_validation') return;
+        if (manual || forceTour) {
+            tourState = 'secretariat_revision_validation';
+            localStorage.setItem(storageKey, tourState);
+        }
+
+        if (!manual && !forceTour && !isFirstLogin) {
+            localStorage.removeItem(storageKey);
+            return;
+        }
+
+        if (!manual && !forceTour && tourState !== 'secretariat_revision_validation') {
+            return;
+        }
+
         if (window.__revisionValidationTourStarted) return;
 
         const rootEl = document.getElementById('revision-root');
         let alpine = null;
+
         try {
-            alpine = window.revisionValidationAlpine || rootEl?.__x?.$data || rootEl?._x_dataStack?.[0] || (window.Alpine ? window.Alpine.$data(rootEl) : null);
+            alpine = window.revisionValidationAlpine ||
+                rootEl?.__x?.$data ||
+                rootEl?._x_dataStack?.[0] ||
+                (window.Alpine ? window.Alpine.$data(rootEl) : null);
         } catch (e) {}
 
         if (!rootEl || !alpine || typeof window.driver === 'undefined') {
             if (retries < 40) {
-                setTimeout(() => initRevisionValidationTour(retries + 1), 250);
+                setTimeout(() => runRevisionValidationTutorial(manual, retries + 1), 250);
             } else {
                 console.error('Tutorial aborted: Could not hook into Alpine or Driver.js.');
             }
@@ -763,16 +831,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tour = driver({
             showProgress: true,
-            allowClose: false,
+            allowClose: manual ? true : false,
             overlayColor: 'rgba(33, 60, 113, 0.75)',
             nextBtnText: 'Next →',
             prevBtnText: '← Back',
 
             onDestroyStarted: () => {
                 if (!tour.hasNextStep()) {
+
+                    if (manual) {
+                        localStorage.setItem(storageKey, 'secretariat_revision_forms_manual_skip');
+                        tour.destroy();
+                        window.location.href = "{{ route('secretariat.revision_forms') }}";
+                        return;
+                    }
+
                     localStorage.setItem(storageKey, 'secretariat_revision_forms');
                     tour.destroy();
                     window.location.href = "{{ route('secretariat.revision_forms') }}";
+
                 } else {
                     tour.destroy();
                 }
@@ -783,7 +860,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 alpine.activeDocument = null;
                 alpine.activeDocKey = null;
                 alpine.activeDocUrl = null;
-                alpine.closeConfirmModal();
+
+                if (alpine.closeConfirmModal) {
+                    alpine.closeConfirmModal();
+                }
+
                 window.__revisionValidationTourStarted = false;
             },
 
@@ -889,6 +970,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tour.drive();
         }, 300);
     }
+
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runRevisionValidationTutorial(true));
+    };
+
+    loadDriverThenRun(() => runRevisionValidationTutorial(false));
 });
 </script>
 @endsection

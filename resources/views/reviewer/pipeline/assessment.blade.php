@@ -803,154 +803,163 @@ document.addEventListener('alpine:init', () => {
 
 <script>
 document.addEventListener('alpine:initialized', () => {
-    // 1. Dynamic CSS/JS Injection
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
         document.head.appendChild(css);
 
-        // Inject Driver Overrides dynamically so we don't break the actual <style> block
-        const styleOverride = document.createElement('style');
-        styleOverride.innerHTML = `
-            .driver-popover { font-family: 'Inter', sans-serif !important; border-radius: 12px !important; border: 1px solid #E5E7EB !important; padding: 20px !important; }
-            .driver-popover-title { color: #213C71 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; font-size: 14px !important; }
-            .driver-popover-description { color: #6B7280 !important; font-weight: 500 !important; font-size: 12px !important; margin-top: 8px !important; line-height: 1.5 !important; }
-            .driver-popover-footer button { border-radius: 8px !important; font-weight: 700 !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; padding: 8px 12px !important; }
-            .driver-popover-next-btn { background-color: #D32F2F !important; color: white !important; border: none !important; text-shadow: none !important; transition: all 0.2s ease !important; }
-            .driver-popover-next-btn:hover { background-color: #b91c1c !important; }
-            .driver-popover-prev-btn { background-color: #F3F4F6 !important; color: #4B5563 !important; border: none !important; }
-            .driver-popover-prev-btn:hover { background-color: #E5E7EB !important; }
-        `;
-        document.head.appendChild(styleOverride);
-
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = initTour;
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initTour();
     }
 
-    function initTour() {
+    function runReviewerAssessmentTutorial(manual = false) {
         const isFirstLogin = @json(auth()->user()->is_first_login);
         const userId = @json(auth()->id());
         const storageKey = 'berc_tutorial_step_' + userId;
 
-        if (!isFirstLogin) {
+        if (manual) {
+            localStorage.removeItem(storageKey);
+            localStorage.setItem(storageKey, 'rev_assessment');
+        }
+
+        if (!manual && !isFirstLogin) {
             localStorage.removeItem(storageKey);
             return;
         }
 
         const tourState = localStorage.getItem(storageKey);
 
-        if (tourState === 'rev_assessment') {
-            const driver = window.driver.js.driver;
-            const alpineComponent = Alpine.$data(document.querySelector('[x-data="assessmentData()"]'));
+        if (tourState === 'rev_assessment_manual_skip') {
+            localStorage.removeItem(storageKey);
+            return;
+        }
 
-            const tour = driver({
-                showProgress: true,
-                allowClose: false,
-                overlayColor: 'rgba(33, 60, 113, 0.75)',
-                nextBtnText: 'Next &rarr;',
-                prevBtnText: '&larr; Back',
+        if (!manual && tourState !== 'rev_assessment') {
+            return;
+        }
 
-                onDestroyStarted: () => {
-                    if (!tour.hasNextStep()) {
-                        alpineComponent.closeModal();
-                        localStorage.setItem(storageKey, 'rev_resubmissions');
-                        tour.destroy();
-                        window.location.href = "{{ route('reviewer.resubmissions') ?? '/reviewer/resubmissions' }}";
+        const driver = window.driver.js.driver;
+        const alpineComponent = Alpine.$data(document.querySelector('[x-data="assessmentData()"]'));
+
+        const tour = driver({
+            showProgress: true,
+            allowClose: manual ? true : false,
+            overlayColor: 'rgba(33, 60, 113, 0.75)',
+            nextBtnText: 'Next →',
+            prevBtnText: '← Back',
+
+            onDestroyStarted: () => {
+                if (!tour.hasNextStep()) {
+                    alpineComponent.closeModal();
+
+                    if (manual) {
+                        localStorage.setItem(storageKey, 'rev_resubmissions_manual_skip');
                     } else {
-                        tour.destroy();
+                        localStorage.setItem(storageKey, 'rev_resubmissions');
+                    }
+
+                    tour.destroy();
+                    window.location.href = "{{ route('reviewer.resubmissions') ?? '/reviewer/resubmissions' }}";
+                } else {
+                    tour.destroy();
+                }
+            },
+
+            steps: [
+                {
+                    element: '#tour-assessment-list',
+                    popover: {
+                        title: 'Your Assessment Queue',
+                        description: 'Once you accept an invitation, the protocol moves here for your official evaluation. Click any row to open the Assessment Dashboard.',
+                        side: "top",
+                        align: 'start',
+                        onNextClick: () => {
+                            alpineComponent.openValidate({
+                                is_mock: true,
+                                protocol_code: '2026-MOCK-002',
+                                research_title: 'Effects of AI on System Architecture',
+                                primary_researcher: 'Dr. Jane Doe',
+                                classification: 'Full Board'
+                            });
+
+                            setTimeout(() => {
+                                tour.moveNext();
+                            }, 300);
+                        }
                     }
                 },
+                {
+                    element: '#tour-assessment-sidebar',
+                    popover: {
+                        title: '1. Navigation & Documents',
+                        description: 'Use this sidebar to toggle back and forth between filling out your Assessment Form and reading the actual protocol documents provided by the researcher.',
+                        side: "right",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#tour-assessment-form',
+                    popover: {
+                        title: '2. The Evaluation Matrix',
+                        description: 'This is the standardized criteria for evaluating the protocol. You will see the researcher’s self-assessed remarks and page references here.',
+                        side: "left",
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#tour-comment-column',
+                    popover: {
+                        title: '3. Adding Feedback',
+                        description: 'Type your detailed findings in the comment box. If a specific issue must be fixed by the researcher before approval, check the Flag as Action Required box.',
+                        side: "bottom",
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#tour-modal-footer',
+                    popover: {
+                        title: '4. Autosave & Submission',
+                        description: 'Your progress automatically saves as a draft while you type. When finished evaluating all rows, click Save Assessment to submit your final review.',
+                        side: "top",
+                        align: 'center',
+                        onNextClick: () => {
+                            alpineComponent.closeModal();
 
-                steps: [
-                    {
-                        element: '#tour-assessment-list',
-                        popover: {
-                            title: 'Your Assessment Queue',
-                            description: 'Once you accept an invitation, the protocol moves here for your official evaluation. Click any row to open the Assessment Dashboard.',
-                            side: "top",
-                            align: 'start',
-                            onNextClick: () => {
-                                // ── MOCK MODAL OPEN ──
-                                alpineComponent.openValidate({
-                                    is_mock: true,
-                                    protocol_code: '2026-MOCK-002',
-                                    research_title: 'Effects of AI on System Architecture',
-                                    primary_researcher: 'Dr. Jane Doe',
-                                    classification: 'Full Board'
-                                });
-
-                                // FIX: Give Alpine/Tailwind 300ms to actually render the modal into the HTML before trying to highlight it!
-                                setTimeout(() => {
-                                    tour.moveNext();
-                                }, 300);
-                            }
-                        }
-                    },
-                    {
-                        element: '#tour-assessment-sidebar',
-                        popover: {
-                            title: '1. Navigation & Documents',
-                            description: 'Use this sidebar to toggle back and forth between filling out your Assessment Form and reading the actual protocol documents provided by the researcher.',
-                            side: "right",
-                            align: 'start'
-                        }
-                    },
-                    {
-                        element: '#tour-assessment-form',
-                        popover: {
-                            title: '2. The Evaluation Matrix',
-                            description: 'This is the standardized criteria for evaluating the protocol. You will see the researcher\'s self-assessed remarks and page references here.',
-                            side: "left",
-                            align: 'center'
-                        }
-                    },
-                    {
-                        element: '#tour-comment-column',
-                        popover: {
-                            title: '3. Adding Feedback',
-                            description: 'Type your detailed findings in the comment box. If a specific issue MUST be fixed by the researcher before approval, check the "Flag as Action Required" box.',
-                            side: "bottom",
-                            align: 'center'
-                        }
-                    },
-                    {
-                        element: '#tour-modal-footer',
-                        popover: {
-                            title: '4. Autosave & Submission',
-                            description: 'Your progress automatically saves as a draft while you type! When you have completely finished evaluating all rows, click "Save Assessment" to submit your final review to the Committee Chair.',
-                            side: "top",
-                            align: 'center',
-                            onNextClick: () => {
-                                alpineComponent.closeModal();
-
-                                // FIX: Give the modal 300ms to fade out cleanly before showing the final floating text
-                                setTimeout(() => {
-                                    tour.moveNext();
-                                }, 300);
-                            }
-                        }
-                    },
-                    {
-                        // Floating popover
-                        popover: {
-                            title: 'Next Stop: Resubmissions',
-                            description: 'If a protocol is returned for changes, the researcher will resubmit it. Let\'s see how to handle those revisions next.',
-                            side: "bottom",
-                            align: 'center',
-                            doneBtnText: 'Next Page →'
+                            setTimeout(() => {
+                                tour.moveNext();
+                            }, 300);
                         }
                     }
-                ]
-            });
+                },
+                {
+                    popover: {
+                        title: 'Next Stop: Resubmissions',
+                        description: 'If a protocol is returned for changes, the researcher will resubmit it. Let’s see how to handle those revisions next.',
+                        side: "bottom",
+                        align: 'center',
+                        doneBtnText: 'Next Page →'
+                    }
+                }
+            ]
+        });
 
-            tour.drive();
-        }
+        tour.drive();
     }
+
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runReviewerAssessmentTutorial(true));
+    };
+
+    loadDriverThenRun(() => runReviewerAssessmentTutorial(false));
 });
 </script>
 @endsection

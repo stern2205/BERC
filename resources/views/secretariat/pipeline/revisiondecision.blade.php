@@ -946,46 +946,82 @@ document.addEventListener('alpine:init', () => {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Ensure Driver.js is loaded
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
         document.head.appendChild(css);
 
+        const styleOverride = document.createElement('style');
+        styleOverride.innerHTML = `
+            .driver-popover { font-family:'Inter',sans-serif!important;border-radius:12px!important;border:1px solid #E5E7EB!important;padding:20px!important;max-width:420px!important; }
+            .driver-popover-title { color:#213C71!important;font-weight:900!important;text-transform:uppercase!important;letter-spacing:.05em!important;font-size:14px!important; }
+            .driver-popover-description { color:#6B7280!important;font-weight:500!important;font-size:12px!important;margin-top:8px!important;line-height:1.6!important; }
+            .driver-popover-footer button { border-radius:8px!important;font-weight:700!important;font-size:11px!important;text-transform:uppercase!important;letter-spacing:.05em!important;padding:8px 12px!important; }
+            .driver-popover-next-btn { background:#D32F2F!important;color:white!important;border:none!important;text-shadow:none!important; }
+            .driver-popover-next-btn:hover { background:#b91c1c!important; }
+            .driver-popover-prev-btn { background:#F3F4F6!important;color:#4B5563!important;border:none!important; }
+            .driver-popover-prev-btn:hover { background:#E5E7EB!important; }
+        `;
+        document.head.appendChild(styleOverride);
+
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = () => initDecisionTour();
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initDecisionTour();
     }
 
-
-    function initDecisionTour(retries = 0) {
+    function runRevisionDecisionTutorial(manual = false, retries = 0) {
         const userId = @json(auth()->id() ?? 1);
+        const isFirstLogin = @json(auth()->check() ? auth()->user()->is_first_login : true);
         const storageKey = 'berc_tutorial_step_' + userId;
+
         const urlParams = new URLSearchParams(window.location.search);
         const forceTour = urlParams.get('tour') === '1';
         let tourState = localStorage.getItem(storageKey);
 
-        if (forceTour) {
+        if (tourState === 'secretariat_revision_decision_manual_skip') {
+            localStorage.removeItem(storageKey);
+            return;
+        }
+
+        if (manual || forceTour) {
             tourState = 'secretariat_revision_decision';
             localStorage.setItem(storageKey, tourState);
         }
 
-        // Only run if we are on the decision stage
-        if (tourState !== 'secretariat_revision_decision') return;
-
-        // Hook into Alpine
-        const rootEl = document.querySelector('[x-data^="decisionData"]');
-        let alpine = null;
-        try { alpine = Alpine.$data(rootEl); } catch (e) {}
-
-        if (!rootEl || !alpine || typeof window.driver === 'undefined') {
-            if (retries < 40) { setTimeout(() => initDecisionTour(retries + 1), 250); }
+        if (!manual && !forceTour && !isFirstLogin) {
+            localStorage.removeItem(storageKey);
             return;
         }
+
+        if (!manual && !forceTour && tourState !== 'secretariat_revision_decision') {
+            return;
+        }
+
+        if (window.__revisionDecisionTourStarted) return;
+
+        const rootEl = document.querySelector('[x-data^="decisionData"]');
+        let alpine = null;
+
+        try {
+            alpine = Alpine.$data(rootEl);
+        } catch (e) {}
+
+        if (!rootEl || !alpine || typeof window.driver === 'undefined') {
+            if (retries < 40) {
+                setTimeout(() => runRevisionDecisionTutorial(manual, retries + 1), 250);
+            }
+            return;
+        }
+
+        window.__revisionDecisionTourStarted = true;
 
         const driver = window.driver.js.driver;
         const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -1021,18 +1057,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tour = driver({
             showProgress: true,
-            allowClose: false,
+            allowClose: manual ? true : false,
             overlayColor: 'rgba(33, 60, 113, 0.75)',
             nextBtnText: 'Next →',
             prevBtnText: '← Back',
 
             onDestroyStarted: () => {
                 if (!tour.hasNextStep()) {
-                    // Progress to Settings for the password change prompt
+
+                    if (manual) {
+                        localStorage.setItem(storageKey, 'settings_password_change_manual_skip');
+                        tour.destroy();
+                        window.location.href = "{{ route('settings') }}";
+                        return;
+                    }
+
                     localStorage.setItem(storageKey, 'settings_password_change');
+                    tour.destroy();
                     window.location.href = "{{ route('settings') }}?tour=1";
+                    return;
                 }
+
                 tour.destroy();
+            },
+
+            onDestroyed: () => {
+                if (alpine.closeModal) {
+                    alpine.closeModal();
+                }
+
+                window.__revisionDecisionTourStarted = false;
             },
 
             steps: [
@@ -1069,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     element: '#tour-decision-sidebar',
                     popover: {
                         title: 'Review Summary',
-                        description: 'Use the sidebar to toggle between viewing the Synthesis Form (to double-check details) and the Decision Letter itself.',
+                        description: 'Use the sidebar to toggle between viewing the Synthesis Form and the Decision Letter itself.',
                         side: 'right'
                     }
                 },
@@ -1089,7 +1143,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     element: '#tour-decision-dropdown',
                     popover: {
                         title: 'Final Recommendation',
-                        description: 'Select the committee’s final decision. This will dynamically update the tone of the letter paragraphs below.',
+                        description: 'Select the committee’s final decision. This dynamically updates the letter paragraphs below.',
                         side: 'bottom',
                         onNextClick: () => {
                             alpine.decisionStatus = 'minor_revision';
@@ -1101,7 +1155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     element: '#tour-letter-editor',
                     popover: {
                         title: 'Editable Letter Template',
-                        description: 'The letter is pre-filled with proponent details and standard BERC phrasing. You can manually edit any field to customize the message.',
+                        description: 'The letter is pre-filled with proponent details and standard BERC phrasing. You can manually edit any field.',
                         side: 'left'
                     }
                 },
@@ -1109,7 +1163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     element: '#tour-revision-summary',
                     popover: {
                         title: 'Revision Attachment',
-                        description: 'Any items marked as "Action Required" during synthesis are automatically listed here. This ensures the researcher knows exactly what still needs to be fixed.',
+                        description: 'Items marked as Action Required during synthesis are automatically listed here.',
                         side: 'top'
                     }
                 },
@@ -1117,16 +1171,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     element: '#tour-decision-submit',
                     popover: {
                         title: 'Finalize & Send',
-                        description: 'When the letter is ready, click here to send it to the PI and the Committee Chair. This completes the protocol’s current review cycle.',
+                        description: 'When the letter is ready, click here to send it to the PI and the Committee Chair.',
                         side: 'top'
                     }
                 },
                 {
                     popover: {
-                        title: 'Final Step: Account Security 🔒',
-                        description: 'You have completed the system tour! Because you are using a default, auto-generated password, your final requirement is to update it. Click below to proceed to your Account Settings.',
+                        title: manual ? 'Next Step: Account Settings' : 'Final Step: Account Security 🔒',
+                        description: manual
+                            ? 'This opens Account Settings without automatically starting the password-change tutorial.'
+                            : 'You have completed the system tour. Since you are using a default, auto-generated password, your final requirement is to update it.',
                         side: 'bottom',
-                        doneBtnText: 'Update Password →'
+                        align: 'center',
+                        doneBtnText: manual ? 'Go to Settings →' : 'Update Password →'
                     }
                 }
             ]
@@ -1134,6 +1191,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => tour.drive(), 500);
     }
+
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runRevisionDecisionTutorial(true));
+    };
+
+    loadDriverThenRun(() => runRevisionDecisionTutorial(false));
 });
 </script>
 @endsection

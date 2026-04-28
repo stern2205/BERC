@@ -210,7 +210,7 @@ class CalendarController extends Controller
                     $deadlineDate = Carbon::parse($rev->date_assigned)->addDay();
                     $lbl = "INVITATION DEADLINE: " . $rev->name;
                 } elseif ($rev->status === 'Accepted' && $rev->date_accepted) {
-                    $days = ($classification === 'full board' || $classification === 'full_board') ? 21 : 10;
+                    $days = ($classification === 'full board' || $classification === 'full_board') ? 20 : 10;
                     $deadlineDate = Carbon::parse($rev->date_accepted)->addDays($days);
                     $lbl = "ASSESSMENT DEADLINE: " . $rev->name;
                 }
@@ -309,7 +309,7 @@ class CalendarController extends Controller
                     $deadlineDate = Carbon::parse($r->date_assigned)->addDay();
                     $lbl = "REV INVITE DEADLINE: " . $r->name;
                 } elseif ($r->status === 'Accepted' && $r->date_accepted) {
-                    $days = ($classification === 'full board' || $classification === 'full_board') ? 21 : 10;
+                    $days = ($classification === 'full board' || $classification === 'full_board') ? 20 : 10;
                     $deadlineDate = Carbon::parse($r->date_accepted)->addDays($days);
                     $lbl = "REV ASSESSMENT DEADLINE: " . $r->name;
                 }
@@ -438,7 +438,7 @@ class CalendarController extends Controller
                 $deadlineDate = Carbon::parse($app->date_assigned)->addDay();
                 $label = 'YOUR INVITATION DEADLINE';
             } elseif ($inviteStatus === 'accepted' && !empty($app->date_accepted)) {
-                $days = in_array($classification, ['full board', 'full_board']) ? 21 : 10;
+                $days = in_array($classification, ['full board', 'full_board']) ? 20 : 10;
                 $deadlineDate = Carbon::parse($app->date_accepted)->addDays($days);
                 $label = 'YOUR ASSESSMENT DEADLINE';
             }
@@ -528,7 +528,7 @@ class CalendarController extends Controller
                 $deadlineDate = Carbon::parse($rev->date_assigned)->addDay();
                 $label = 'YOUR REVISION INVITATION DEADLINE';
             } elseif ($inviteStatus === 'accepted' && !empty($rev->date_accepted)) {
-                $days = in_array($classification, ['full board', 'full_board']) ? 21 : 10;
+                $days = in_array($classification, ['full board', 'full_board']) ? 20 : 10;
                 $deadlineDate = Carbon::parse($rev->date_accepted)->addDays($days);
                 $label = 'YOUR REVISION ASSESSMENT DEADLINE';
             }

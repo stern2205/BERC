@@ -209,6 +209,15 @@
                         <p class="text-[10px] text-gray-500 mt-0.5">Create Letter</p>
                     </div>
                 </a>
+                <a href="{{ route('secretariat.reports') }}" class="relative flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:border-brand-red hover:bg-gray-50 transition group shadow-sm">
+                    <div class="bg-red-50 p-3 rounded-lg group-hover:bg-red-100 transition-colors shrink-0">
+                        <svg class="w-6 h-6 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <div class="text-left min-w-0">
+                        <p class="font-bold text-[13px] text-bsu-dark uppercase leading-tight truncate">History & Reports</p>
+                        <p class="text-[10px] text-gray-500 mt-0.5">View History</p>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
@@ -565,129 +574,148 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Dynamic CSS/JS Injection
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
         document.head.appendChild(css);
 
-        // Inject Driver Overrides
         const styleOverride = document.createElement('style');
         styleOverride.innerHTML = `
-            .driver-popover { font-family: 'Inter', sans-serif !important; border-radius: 12px !important; border: 1px solid #E5E7EB !important; padding: 20px !important; }
-            .driver-popover-title { color: #213C71 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; font-size: 14px !important; }
-            .driver-popover-description { color: #6B7280 !important; font-weight: 500 !important; font-size: 12px !important; margin-top: 8px !important; line-height: 1.5 !important; }
-            .driver-popover-footer button { border-radius: 8px !important; font-weight: 700 !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; padding: 8px 12px !important; }
-            .driver-popover-next-btn { background-color: #D32F2F !important; color: white !important; border: none !important; text-shadow: none !important; transition: all 0.2s ease !important; }
-            .driver-popover-next-btn:hover { background-color: #b91c1c !important; }
-            .driver-popover-prev-btn { background-color: #F3F4F6 !important; color: #4B5563 !important; border: none !important; }
-            .driver-popover-prev-btn:hover { background-color: #E5E7EB !important; }
+            .driver-popover { font-family:'Inter',sans-serif!important;border-radius:12px!important;border:1px solid #E5E7EB!important;padding:20px!important; }
+            .driver-popover-title { color:#213C71!important;font-weight:900!important;text-transform:uppercase!important;letter-spacing:.05em!important;font-size:14px!important; }
+            .driver-popover-description { color:#6B7280!important;font-weight:500!important;font-size:12px!important;margin-top:8px!important;line-height:1.5!important; }
+            .driver-popover-footer button { border-radius:8px!important;font-weight:700!important;font-size:11px!important;text-transform:uppercase!important;letter-spacing:.05em!important;padding:8px 12px!important; }
+            .driver-popover-next-btn { background:#D32F2F!important;color:#fff!important;border:none!important; }
+            .driver-popover-next-btn:hover { background:#b91c1c!important; }
+            .driver-popover-prev-btn { background:#F3F4F6!important;color:#4B5563!important;border:none!important; }
+            .driver-popover-prev-btn:hover { background:#E5E7EB!important; }
         `;
         document.head.appendChild(styleOverride);
 
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = initTour;
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initTour();
     }
 
-    function initTour() {
+    function runSecretariatDashboardTutorial(manual = false) {
+        const userId = @json(auth()->id());
+        const storageKey = 'berc_tutorial_step_' + userId;
+
+        if (manual) {
+            localStorage.removeItem(storageKey);
+            localStorage.setItem(storageKey, 'secretariat_dashboard');
+        }
+
+        const driver = window.driver.js.driver;
+
+        const tour = driver({
+            showProgress: true,
+            allowClose: manual ? true : false,
+            overlayColor: 'rgba(33, 60, 113, 0.75)',
+            nextBtnText: 'Next →',
+            prevBtnText: '← Back',
+
+            onDestroyStarted: () => {
+                if (!tour.hasNextStep()) {
+                    localStorage.setItem(storageKey, 'secretariat_calendar');
+                    tour.destroy();
+                    window.location.href = "{{ route('secretariat.calendar') ?? '/secretariat/calendar' }}";
+                } else {
+                    tour.destroy();
+                }
+            },
+
+            steps: [
+                {
+                    element: '#tour-profile',
+                    popover: {
+                        title: 'Welcome Secretariat!',
+                        description: 'This is your central command dashboard. You serve as the bridge between Researchers, Reviewers, and the Committee Chair.',
+                        side: "bottom",
+                        align: "start"
+                    }
+                },
+                {
+                    element: '#tour-kpis',
+                    popover: {
+                        title: 'Original Applications Hub',
+                        description: 'These indicators track newly submitted protocols and their progress.',
+                        side: "bottom",
+                        align: "start"
+                    }
+                },
+                {
+                    element: '#tour-protocol-mgmt',
+                    popover: {
+                        title: 'Primary Workflows',
+                        description: 'These modules manage initial submissions, assessments, and decisions.',
+                        side: "top",
+                        align: "start"
+                    }
+                },
+                {
+                    element: '#tour-resub-mgmt',
+                    popover: {
+                        title: 'Resubmissions Handling',
+                        description: 'Updated researcher submissions are validated here.',
+                        side: "top",
+                        align: "start"
+                    }
+                },
+                {
+                    element: '#tour-analytics',
+                    popover: {
+                        title: 'Data & Reporting',
+                        description: 'View analytics, workload statistics, and printable reports.',
+                        side: "top",
+                        align: "start"
+                    }
+                },
+                {
+                    popover: {
+                        title: 'Next Stop: Calendar',
+                        description: 'Let’s continue to the Calendar page.',
+                        side: "bottom",
+                        align: "center",
+                        doneBtnText: 'Next Page →'
+                    }
+                }
+            ]
+        });
+
+        tour.drive();
+    }
+
+    // MANUAL BUTTON FROM LAYOUT
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runSecretariatDashboardTutorial(true));
+    };
+
+    // AUTO FIRST LOGIN
+    loadDriverThenRun(() => {
         const isFirstLogin = @json(auth()->user()->is_first_login);
         const userId = @json(auth()->id());
         const storageKey = 'berc_tutorial_step_' + userId;
+        const tourState = localStorage.getItem(storageKey);
 
         if (!isFirstLogin) {
             localStorage.removeItem(storageKey);
             return;
         }
 
-        const tourState = localStorage.getItem(storageKey);
-
         if (!tourState || tourState === 'secretariat_dashboard') {
-            const driver = window.driver.js.driver;
-
-            const tour = driver({
-                showProgress: true,
-                allowClose: false,
-                overlayColor: 'rgba(33, 60, 113, 0.75)',
-                nextBtnText: 'Next &rarr;',
-                prevBtnText: '&larr; Back',
-
-                onDestroyStarted: () => {
-                    if (!tour.hasNextStep()) {
-                        localStorage.setItem(storageKey, 'secretariat_calendar');
-                        tour.destroy();
-                        window.location.href = "{{ route('secretariat.calendar') ?? '/secretariat/calendar' }}";
-                    } else {
-                        tour.destroy();
-                    }
-                },
-
-                steps: [
-                    {
-                        element: '#tour-profile',
-                        popover: {
-                            title: 'Welcome Secretariat!',
-                            description: 'This is your central command dashboard. As the Secretariat, you serve as the critical bridge between Researchers, Reviewers, and the Committee Chair.',
-                            side: "bottom",
-                            align: 'start',
-                        }
-                    },
-                    {
-                        element: '#tour-kpis',
-                        popover: {
-                            title: 'Original Applications Hub',
-                            description: 'These indicators track the flow of brand new protocols. You will oversee assigning reviewers, synthesizing their feedback, and finalizing decision letters.',
-                            side: "bottom",
-                            align: 'start',
-                        }
-                    },
-                    {
-                        element: '#tour-protocol-mgmt',
-                        popover: {
-                            title: 'Primary Workflows',
-                            description: 'This section contains the core modules for processing initial submissions. From checking documents to compiling final reviews.',
-                            side: "top",
-                            align: 'start',
-                        }
-                    },
-                    {
-                        element: '#tour-resub-mgmt',
-                        popover: {
-                            title: 'Resubmissions Handling',
-                            description: 'When researchers update their protocols based on feedback, those revisions will land here for secondary validation.',
-                            side: "top",
-                            align: 'start',
-                        }
-                    },
-                    {
-                        element: '#tour-analytics',
-                        popover: {
-                            title: 'Data & Reporting',
-                            description: 'A comprehensive analytics suite tracking the volume, status, and processing times of all committee activities. You can easily print this for reporting purposes.',
-                            side: "top",
-                            align: 'start',
-                        }
-                    },
-                    {
-                        // Floating popover
-                        popover: {
-                            title: 'Next Stop: The Calendar',
-                            description: 'Let\'s check the Calendar to see how you can track committee deadlines and meetings. Click below to continue.',
-                            side: "bottom",
-                            align: 'center',
-                            doneBtnText: 'Next Page →'
-                        }
-                    }
-                ]
-            });
-
-            tour.drive();
+            runSecretariatDashboardTutorial(false);
         }
-    }
+    });
+
 });
 </script>
 @endsection

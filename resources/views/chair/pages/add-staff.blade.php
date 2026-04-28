@@ -890,137 +890,156 @@ document.addEventListener('alpine:init', () => {
 
 <script>
 document.addEventListener('alpine:initialized', () => {
-    // 1. Dynamic CSS/JS Injection
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
         document.head.appendChild(css);
 
-        // Inject Driver Overrides
         const styleOverride = document.createElement('style');
         styleOverride.innerHTML = `
-            .driver-popover { font-family: 'Inter', sans-serif !important; border-radius: 12px !important; border: 1px solid #E5E7EB !important; padding: 20px !important; }
-            .driver-popover-title { color: #213C71 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; font-size: 14px !important; }
-            .driver-popover-description { color: #6B7280 !important; font-weight: 500 !important; font-size: 12px !important; margin-top: 8px !important; line-height: 1.5 !important; }
-            .driver-popover-footer button { border-radius: 8px !important; font-weight: 700 !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; padding: 8px 12px !important; }
-            .driver-popover-next-btn { background-color: #D32F2F !important; color: white !important; border: none !important; text-shadow: none !important; transition: all 0.2s ease !important; }
-            .driver-popover-next-btn:hover { background-color: #b91c1c !important; }
-            .driver-popover-prev-btn { background-color: #F3F4F6 !important; color: #4B5563 !important; border: none !important; }
-            .driver-popover-prev-btn:hover { background-color: #E5E7EB !important; }
+            .driver-popover { font-family:'Inter',sans-serif!important;border-radius:12px!important;border:1px solid #E5E7EB!important;padding:20px!important; }
+            .driver-popover-title { color:#213C71!important;font-weight:900!important;text-transform:uppercase!important;letter-spacing:.05em!important;font-size:14px!important; }
+            .driver-popover-description { color:#6B7280!important;font-weight:500!important;font-size:12px!important;line-height:1.5!important; }
+            .driver-popover-footer button { border-radius:8px!important;font-weight:700!important;font-size:11px!important;padding:8px 12px!important; }
+            .driver-popover-next-btn { background:#D32F2F!important;color:#fff!important;border:none!important; }
+            .driver-popover-prev-btn { background:#F3F4F6!important;color:#4B5563!important;border:none!important; }
         `;
         document.head.appendChild(styleOverride);
 
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = initTour;
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initTour();
     }
 
-    function initTour() {
+    function runChairStaffTutorial(manual = false) {
+        const userId = @json(auth()->id());
+        const storageKey = 'berc_tutorial_step_' + userId;
+
+        if (manual) {
+            localStorage.removeItem(storageKey);
+            localStorage.setItem(storageKey, 'chair_staff');
+        }
+
+        const alpineRoot = document.querySelector('[x-data="staffLogsData()"]');
+        if (!alpineRoot) return;
+
+        const alpineComponent = Alpine.$data(alpineRoot);
+        const driver = window.driver.js.driver;
+
+        const tour = driver({
+            showProgress: true,
+            allowClose: manual ? true : false,
+            overlayColor: 'rgba(33, 60, 113, 0.75)',
+            nextBtnText: 'Next →',
+            prevBtnText: '← Back',
+
+            onDestroyStarted: () => {
+                if (alpineComponent.closeProfileModal) {
+                    alpineComponent.closeProfileModal();
+                }
+
+                if (!tour.hasNextStep()) {
+                    localStorage.setItem(storageKey, 'chair_history');
+                    tour.destroy();
+                    window.location.href = "{{ route('chair.history') ?? '/chair/history' }}";
+                } else {
+                    tour.destroy();
+                }
+            },
+
+            steps: [
+                {
+                    element: '#tour-staff-header',
+                    popover: {
+                        title: 'Staff Management',
+                        description: 'Manage committee accounts, roles, and access from this page.',
+                        side: "bottom",
+                        align: "start"
+                    }
+                },
+                {
+                    element: '#tour-staff-directory',
+                    popover: {
+                        title: 'Employee Directory',
+                        description: 'View all committee members and open profiles for management.',
+                        side: "top",
+                        align: "start",
+                        onNextClick: () => {
+                            alpineComponent.openProfile({
+                                is_mock: true,
+                                id: 999,
+                                employeeId: 'STF-999',
+                                name: 'Dr. Emmet Brown',
+                                email: 'emmet.brown@g.batstate-u.edu.ph',
+                                role: 'Panel Expert',
+                                expertise: 'Panel I - Engineering | Software Architecture',
+                                status: 'Active',
+                                logType: 'Time In',
+                                logTimestamp: '08:00 AM | 04/15/26'
+                            });
+
+                            setTimeout(() => tour.moveNext(), 300);
+                        }
+                    }
+                },
+                {
+                    element: '#tour-staff-logs',
+                    popover: {
+                        title: 'Account Activity',
+                        description: 'Login activity and engagement logs are tracked here.',
+                        side: "top",
+                        align: "start",
+                        onNextClick: () => {
+                            alpineComponent.closeProfileModal();
+                            setTimeout(() => tour.moveNext(), 300);
+                        }
+                    }
+                },
+                {
+                    popover: {
+                        title: 'Next Stop: History & Archives',
+                        description: 'The final page is the History archive where finalized protocols are permanently stored.',
+                        side: "bottom",
+                        align: "center",
+                        doneBtnText: 'Next Page →'
+                    }
+                }
+            ]
+        });
+
+        tour.drive();
+    }
+
+    // manual button support from layout
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runChairStaffTutorial(true));
+    };
+
+    // automatic first-login flow
+    loadDriverThenRun(() => {
         const isFirstLogin = @json(auth()->user()->is_first_login);
         const userId = @json(auth()->id());
         const storageKey = 'berc_tutorial_step_' + userId;
+        const tourState = localStorage.getItem(storageKey);
 
         if (!isFirstLogin) {
             localStorage.removeItem(storageKey);
             return;
         }
 
-        const tourState = localStorage.getItem(storageKey);
-
         if (tourState === 'chair_staff') {
-            const driver = window.driver.js.driver;
-
-            // Gain access to Alpine's state variables
-            const alpineComponent = Alpine.$data(document.querySelector('[x-data="staffLogsData()"]'));
-
-            const tour = driver({
-                showProgress: true,
-                allowClose: false,
-                overlayColor: 'rgba(33, 60, 113, 0.75)',
-                nextBtnText: 'Next &rarr;',
-                prevBtnText: '&larr; Back',
-
-                onDestroyStarted: () => {
-                    if (!tour.hasNextStep()) {
-                        alpineComponent.closeProfileModal();
-
-                        localStorage.setItem(storageKey, 'chair_history');
-                        tour.destroy();
-                        window.location.href = "{{ route('chair.history') ?? '/chair/history' }}";
-                    } else {
-                        tour.destroy();
-                    }
-                },
-
-                steps: [
-                    {
-                        element: '#tour-staff-header',
-                        popover: {
-                            title: 'Staff Management',
-                            description: 'As Chair, you have the authority to manage all committee accounts. You can create new accounts for the Secretariat, other Reviewers, or Co-Chairs here.',
-                            side: "bottom",
-                            align: 'start',
-                        }
-                    },
-                    {
-                        element: '#tour-staff-directory',
-                        popover: {
-                            title: 'Employee Directory',
-                            description: 'This is the active roster of your committee. You can click on any employee block to view their full profile, update their status, or delete their account.',
-                            side: "top",
-                            align: 'start',
-                            onNextClick: () => {
-                                // ── MOCK MODAL OPEN ──
-                                alpineComponent.openProfile({
-                                    is_mock: true,
-                                    id: 999,
-                                    employeeId: 'STF-999',
-                                    name: 'Dr. Emmet Brown',
-                                    email: 'emmet.brown@g.batstate-u.edu.ph',
-                                    role: 'Panel Expert',
-                                    expertise: 'Panel I - Engineering | Software Architecture',
-                                    status: 'Active',
-                                    logType: 'Time In',
-                                    logTimestamp: '08:00 AM | 04/15/26'
-                                });
-
-                                setTimeout(() => { tour.moveNext(); }, 300);
-                            }
-                        }
-                    },
-                    {
-                        element: '#tour-staff-logs',
-                        popover: {
-                            title: 'Account Activity',
-                            description: 'Every time a committee member logs into the system, it is recorded here so you can monitor system engagement.',
-                            side: "top",
-                            align: 'start',
-                            onNextClick: () => {
-                                alpineComponent.closeProfileModal();
-                                setTimeout(() => { tour.moveNext(); }, 300);
-                            }
-                        }
-                    },
-                    {
-                        // Floating popover
-                        popover: {
-                            title: 'Next Stop: History & Archives',
-                            description: 'The last feature of the system is the History archive where all finalized protocols are permanently stored. Let\'s check it out.',
-                            side: "bottom",
-                            align: 'center',
-                            doneBtnText: 'Next Page →'
-                        }
-                    }
-                ]
-            });
-
-            tour.drive();
+            runChairStaffTutorial(false);
         }
-    }
+    });
+
 });
 </script>
 @endsection

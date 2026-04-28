@@ -207,6 +207,15 @@
             </div>
 
             <div class="flex items-center space-x-6 border-l border-gray-200 pl-6 py-4">
+                <button type="button"
+                        onclick="startManualTutorial()"
+                        class="flex items-center gap-2 transition-all hover:-translate-y-0.5 text-gray-500 hover:text-bsu-dark">
+                    <svg class="w-4 h-4 shrink-0 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.228 9c.549-1.165 1.823-2 3.272-2 1.933 0 3.5 1.343 3.5 3 0 1.305-.973 2.416-2.333 2.83-.727.221-1.167.874-1.167 1.67M12 18h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
+                    </svg>
+                    <span>VIEW TUTORIAL</span>
+                </button>
                 <a href="{{ route('settings') }}"
                 class="flex items-center gap-2 transition-all hover:-translate-y-0.5 {{ request()->routeIs('settings') ? 'text-bsu-dark font-black' : 'text-gray-500 hover:text-bsu-dark' }}">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -282,7 +291,7 @@
     </div>
 </header>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+<div class="max-w-7xl mx-auto px-4 py-4">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative mb-4">
         <div class="absolute inset-0 z-0">
             <img src="{{ asset('images/background.jpg') }}" alt="Background" class="w-full h-full object-cover">
@@ -1184,6 +1193,74 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+</script>
+
+<script>
+function startManualTutorial() {
+    if (typeof window.driver === 'undefined') {
+        console.error("Driver.js is missing on the History page!");
+        return;
+    }
+
+    const driver = window.driver.js.driver;
+
+    const tour = driver({
+        showProgress: true,
+        allowClose: true,
+        overlayColor: 'rgba(33, 60, 113, 0.75)',
+        nextBtnText: 'Next →',
+        prevBtnText: '← Back',
+
+        onDestroyStarted: () => {
+            if (!tour.hasNextStep()) {
+                tour.destroy();
+                window.location.href = "{{ route('secstaff.payment_settings') }}";
+            } else {
+                tour.destroy();
+            }
+        },
+
+        steps: [
+            {
+                element: '.search-filter-bar',
+                popover: {
+                    title: 'Search & Filter Archives',
+                    description: 'Need to pull up an old protocol? Use this bar to quickly search by ID, title, or researcher name. You can also filter the list to show only Completed or Rejected applications.',
+                    side: "bottom",
+                    align: 'start'
+                }
+            },
+            {
+                element: '.app-card',
+                popover: {
+                    title: 'The Permanent Archive',
+                    description: 'This is your secure history hub. Any application that has reached a final verdict automatically leaves the active queue and is permanently stored here for record-keeping.',
+                    side: "top",
+                    align: 'start'
+                }
+            },
+            {
+                popover: {
+                    title: 'Retrieving Old Documents',
+                    description: 'Click any archived record to view its timeline, read the final decision letter, and batch-download the full document package anytime.',
+                    side: "bottom",
+                    align: 'center'
+                }
+            },
+            {
+                popover: {
+                    title: 'Next Stop: Payment Settings',
+                    description: 'Let’s continue to the Payment Settings page.',
+                    side: "bottom",
+                    align: 'center',
+                    doneBtnText: 'Next Page →'
+                }
+            }
+        ]
+    });
+
+    tour.drive();
+}
 </script>
 </body>
 </html>

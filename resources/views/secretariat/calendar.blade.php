@@ -937,8 +937,13 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // 1. Dynamic Injection: Ensure Driver.js is loaded
-        if (typeof window.driver === 'undefined') {
+
+        function loadDriverThenRun(callback) {
+            if (typeof window.driver !== 'undefined') {
+                callback();
+                return;
+            }
+
             const css = document.createElement('link');
             css.rel = 'stylesheet';
             css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
@@ -946,108 +951,121 @@
 
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-            script.onload = initTour;
+            script.onload = callback;
             document.head.appendChild(script);
-        } else {
-            initTour();
         }
 
-        function initTour() {
-            const isFirstLogin = @json(auth()->user()->is_first_login);
+        function runSecretariatCalendarTutorial(manual = false) {
             const userId = @json(auth()->id());
             const storageKey = 'berc_tutorial_step_' + userId;
 
-            // If they already changed their password, wipe memory and abort
+            if (manual) {
+                localStorage.removeItem(storageKey);
+                localStorage.setItem(storageKey, 'secretariat_calendar');
+            }
+
+            const driver = window.driver.js.driver;
+
+            const tour = driver({
+                showProgress: true,
+                allowClose: manual ? true : false,
+                overlayColor: 'rgba(33, 60, 113, 0.75)',
+                nextBtnText: 'Next →',
+                prevBtnText: '← Back',
+
+                onDestroyStarted: () => {
+                    if (!tour.hasNextStep()) {
+                        localStorage.setItem(storageKey, 'secretariat_evaluation');
+                        tour.destroy();
+                        window.location.href = "{{ route('secretariat.evaluation') ?? '/secretariat/evaluation' }}";
+                    } else {
+                        tour.destroy();
+                    }
+                },
+
+                steps: [
+                    {
+                        element: '#tour-calendar-legend',
+                        popover: {
+                            title: 'Visual Tracking',
+                            description: 'Every protocol is color-coded based on its current status. As the Secretariat, you will primarily manage items flagged as "At Secretariat".',
+                            side: "bottom",
+                            align: 'start'
+                        }
+                    },
+                    {
+                        element: '#tour-calendar-rules',
+                        popover: {
+                            title: 'Key Dates',
+                            description: 'Committee meeting days and application cut-off dates are automatically generated and marked on the calendar for reference.',
+                            side: "bottom",
+                            align: 'start'
+                        }
+                    },
+                    {
+                        element: '#tour-calendar-filters',
+                        popover: {
+                            title: 'Filter Views',
+                            description: 'If the calendar looks cluttered, use these buttons to isolate specific statuses—like filtering to show ONLY the applications waiting at your desk.',
+                            side: "bottom",
+                            align: 'start'
+                        }
+                    },
+                    {
+                        element: '#tour-calendar-grid',
+                        popover: {
+                            title: 'Interactive Grid',
+                            description: 'This is the main calendar. Clicking on any day with an event will pop up a detailed list of all protocols and deadlines occurring on that date.',
+                            side: "top",
+                            align: 'start'
+                        }
+                    },
+                    {
+                        element: '#tour-calendar-sidebar',
+                        popover: {
+                            title: 'Monthly Summary',
+                            description: 'A quick breakdown of the month’s schedule across the entire committee. Scroll down here to see an organized list of all upcoming tasks for the current month.',
+                            side: "left",
+                            align: 'start'
+                        }
+                    },
+                    {
+                        popover: {
+                            title: 'Next Stop: Evaluation',
+                            description: 'Now that you know how to track deadlines, let’s see what happens when a new protocol needs to be classified. Click below to continue.',
+                            side: "bottom",
+                            align: 'center',
+                            doneBtnText: 'Next Page →'
+                        }
+                    }
+                ]
+            });
+
+            tour.drive();
+        }
+
+        // MANUAL BUTTON FROM LAYOUT
+        window.startPageTutorial = function () {
+            loadDriverThenRun(() => runSecretariatCalendarTutorial(true));
+        };
+
+        // AUTO FIRST LOGIN FLOW
+        loadDriverThenRun(() => {
+            const isFirstLogin = @json(auth()->user()->is_first_login);
+            const userId = @json(auth()->id());
+            const storageKey = 'berc_tutorial_step_' + userId;
+            const tourState = localStorage.getItem(storageKey);
+
             if (!isFirstLogin) {
                 localStorage.removeItem(storageKey);
                 return;
             }
 
-            const tourState = localStorage.getItem(storageKey);
-
-            // Trigger ONLY if they arrived from the Dashboard
             if (tourState === 'secretariat_calendar') {
-                const driver = window.driver.js.driver;
-                const tour = driver({
-                    showProgress: true,
-                    allowClose: false,
-                    overlayColor: 'rgba(33, 60, 113, 0.75)',
-                    nextBtnText: 'Next &rarr;',
-                    prevBtnText: '&larr; Back',
-
-                    onDestroyStarted: () => {
-                        if (!tour.hasNextStep()) {
-                            // Move to the Evaluation page next
-                            localStorage.setItem(storageKey, 'secretariat_evaluation');
-                            tour.destroy();
-                            window.location.href = "{{ route('secretariat.evaluation') ?? '/secretariat/evaluation' }}";
-                        } else {
-                            tour.destroy();
-                        }
-                    },
-
-                    steps: [
-                        {
-                            element: '#tour-calendar-legend',
-                            popover: {
-                                title: 'Visual Tracking',
-                                description: 'Every protocol is color-coded based on its current status. As the Secretariat, you will primarily manage items flagged as "At Secretariat".',
-                                side: "bottom",
-                                align: 'start'
-                            }
-                        },
-                        {
-                            element: '#tour-calendar-rules',
-                            popover: {
-                                title: 'Key Dates',
-                                description: 'Committee meeting days and application cut-off dates are automatically generated and marked on the calendar for reference.',
-                                side: "bottom",
-                                align: 'start'
-                            }
-                        },
-                        {
-                            element: '#tour-calendar-filters',
-                            popover: {
-                                title: 'Filter Views',
-                                description: 'If the calendar looks cluttered, use these buttons to isolate specific statuses—like filtering to show ONLY the applications waiting at your desk.',
-                                side: "bottom",
-                                align: 'start'
-                            }
-                        },
-                        {
-                            element: '#tour-calendar-grid',
-                            popover: {
-                                title: 'Interactive Grid',
-                                description: 'This is the main calendar. Clicking on any day with an event will pop up a detailed list of all protocols and deadlines occurring on that date.',
-                                side: "top",
-                                align: 'start'
-                            }
-                        },
-                        {
-                            element: '#tour-calendar-sidebar',
-                            popover: {
-                                title: 'Monthly Summary',
-                                description: 'A quick breakdown of the month\'s schedule across the entire committee. Scroll down here to see an organized list of all upcoming tasks for the current month.',
-                                side: "left",
-                                align: 'start'
-                            }
-                        },
-                        {
-                            // Floating popover
-                            popover: {
-                                title: 'Next Stop: Evaluation',
-                                description: 'Now that you know how to track deadlines, let\'s see what happens when a new protocol needs to be classified. Click below to continue.',
-                                side: "bottom",
-                                align: 'center',
-                                doneBtnText: 'Next Page →' // Sends them to secretariat.evaluation
-                            }
-                        }
-                    ]
-                });
-
-                tour.drive();
+                runSecretariatCalendarTutorial(false);
             }
-        }
+        });
+
     });
     </script>
 @endpush

@@ -426,6 +426,9 @@ Route::middleware(['auth', 'prevent-back-history'])->group(function () {
     Route::get('/api/secretariat/resubmission/{protocol_code}/v{revision_number}/draft', [SecretariatController::class, 'getResubmissionDraft']);
     Route::post('/api/secretariat/resubmission/{protocol_code}/v{revision_number}/draft', [SecretariatController::class, 'saveResubmissionDraft']);
 
+    Route::post('/secretariat/reassignment/{protocol_code}/expire-reviewer',
+        [ResearchApplicationStatusController::class, 'expireAcceptedReviewerForReassignment']
+    )->name('secretariat.reassignment.expire-reviewer');
 
     /*
     |--------------------------------------------------------------------------

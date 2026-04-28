@@ -956,131 +956,145 @@
     </script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Dynamic CSS/JS Injection
-            if (typeof window.driver === 'undefined') {
-                const css = document.createElement('link');
-                css.rel = 'stylesheet';
-                css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
-                document.head.appendChild(css);
+    document.addEventListener('DOMContentLoaded', () => {
 
-                const styleOverride = document.createElement('style');
-                styleOverride.innerHTML = `
-                    .driver-popover { font-family: 'Inter', sans-serif !important; border-radius: 12px !important; border: 1px solid #E5E7EB !important; padding: 20px !important; }
-                    .driver-popover-title { color: #213C71 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; font-size: 14px !important; }
-                    .driver-popover-description { color: #6B7280 !important; font-weight: 500 !important; font-size: 12px !important; margin-top: 8px !important; line-height: 1.5 !important; }
-                    .driver-popover-footer button { border-radius: 8px !important; font-weight: 700 !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; padding: 8px 12px !important; }
-                    .driver-popover-next-btn { background-color: #D32F2F !important; color: white !important; border: none !important; text-shadow: none !important; transition: all 0.2s ease !important; }
-                    .driver-popover-next-btn:hover { background-color: #b91c1c !important; }
-                    .driver-popover-prev-btn { background-color: #F3F4F6 !important; color: #4B5563 !important; border: none !important; }
-                    .driver-popover-prev-btn:hover { background-color: #E5E7EB !important; }
-                `;
-                document.head.appendChild(styleOverride);
-
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-                script.onload = initTour;
-                document.head.appendChild(script);
-            } else {
-                initTour();
+        function loadDriverThenRun(callback) {
+            if (typeof window.driver !== 'undefined') {
+                callback();
+                return;
             }
 
-            function initTour() {
-                const isFirstLogin = @json(auth()->user()->is_first_login);
-                const userId = @json(auth()->id());
-                const storageKey = 'berc_tutorial_step_' + userId;
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
+            document.head.appendChild(css);
 
-                // If they already changed their password, wipe memory and abort
-                if (!isFirstLogin) {
-                    localStorage.removeItem(storageKey);
-                    return;
-                }
+            const styleOverride = document.createElement('style');
+            styleOverride.innerHTML = `
+                .driver-popover { font-family: 'Inter', sans-serif !important; border-radius: 12px !important; border: 1px solid #E5E7EB !important; padding: 20px !important; }
+                .driver-popover-title { color: #213C71 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; font-size: 14px !important; }
+                .driver-popover-description { color: #6B7280 !important; font-weight: 500 !important; font-size: 12px !important; margin-top: 8px !important; line-height: 1.5 !important; }
+                .driver-popover-footer button { border-radius: 8px !important; font-weight: 700 !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; padding: 8px 12px !important; }
+                .driver-popover-next-btn { background-color: #D32F2F !important; color: white !important; border: none !important; text-shadow: none !important; }
+                .driver-popover-prev-btn { background-color: #F3F4F6 !important; color: #4B5563 !important; border: none !important; }
+            `;
+            document.head.appendChild(styleOverride);
 
-                const tourState = localStorage.getItem(storageKey);
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
+            script.onload = callback;
+            document.head.appendChild(script);
+        }
 
-                // Trigger ONLY if they arrived from the Dashboard
-                if (tourState === 'chair_calendar') {
-                    const driver = window.driver.js.driver;
-                    const tour = driver({
-                        showProgress: true,
-                        allowClose: false,
-                        overlayColor: 'rgba(33, 60, 113, 0.75)',
-                        nextBtnText: 'Next &rarr;',
-                        prevBtnText: '&larr; Back',
+        function runChairCalendarTutorial(manual = false) {
+            const userId = @json(auth()->id());
+            const storageKey = 'berc_tutorial_step_' + userId;
 
-                        onDestroyStarted: () => {
-                            if (!tour.hasNextStep()) {
-                                // Move to the Approval page next
-                                localStorage.setItem(storageKey, 'chair_approval');
-                                tour.destroy();
-                                window.location.href = "{{ route('chair.approval') ?? '/chair/approval' }}";
-                            } else {
-                                tour.destroy();
-                            }
-                        },
+            if (manual) {
+                localStorage.removeItem(storageKey);
+                localStorage.setItem(storageKey, 'chair_calendar');
+            }
 
-                        steps: [
-                            {
-                                element: '#tour-calendar-legend',
-                                popover: {
-                                    title: 'Visual Tracking',
-                                    description: 'As Chair, you have a complete overview of the workflow. The color coding allows you to instantly see which protocols are stuck at the Secretariat, Reviewers, or Applicants.',
-                                    side: "bottom",
-                                    align: 'start'
-                                }
-                            },
-                            {
-                                element: '#tour-calendar-rules',
-                                popover: {
-                                    title: 'Key Dates',
-                                    description: 'Committee meeting days and application cut-off dates are automatically generated and marked on the calendar for reference.',
-                                    side: "bottom",
-                                    align: 'start'
-                                }
-                            },
-                            {
-                                element: '#tour-calendar-filters',
-                                popover: {
-                                    title: 'Filter Views',
-                                    description: 'Use these buttons to isolate specific statuses—like filtering to show ONLY the applications waiting at your desk for final approval.',
-                                    side: "bottom",
-                                    align: 'start'
-                                }
-                            },
-                            {
-                                element: '#tour-calendar-grid',
-                                popover: {
-                                    title: 'Interactive Grid',
-                                    description: 'This is the main calendar. Clicking on any day with an event will pop up a detailed list of all protocols and deadlines occurring on that date.',
-                                    side: "top",
-                                    align: 'start'
-                                }
-                            },
-                            {
-                                element: '#tour-calendar-sidebar',
-                                popover: {
-                                    title: 'Monthly Summary',
-                                    description: 'A quick breakdown of the month\'s workload across the entire committee. Scroll down here to see an organized list of all upcoming assignments.',
-                                    side: "left",
-                                    align: 'start'
-                                }
-                            },
-                            {
-                                // Floating popover
-                                popover: {
-                                    title: 'Next Stop: Final Approvals',
-                                    description: 'Once reviewers finish assessing a protocol, it comes to you for a final decision. Let\'s see how that works next.',
-                                    side: "bottom",
-                                    align: 'center',
-                                    doneBtnText: 'Next Page →' // Sends them to chair.approval
-                                }
-                            }
-                        ]
-                    });
+            const driver = window.driver.js.driver;
 
-                    tour.drive();
-                }
+            const tour = driver({
+                showProgress: true,
+                allowClose: manual ? true : false,
+                overlayColor: 'rgba(33, 60, 113, 0.75)',
+                nextBtnText: 'Next →',
+                prevBtnText: '← Back',
+
+                onDestroyStarted: () => {
+                    if (!tour.hasNextStep()) {
+                        localStorage.setItem(storageKey, 'chair_approval');
+                        tour.destroy();
+                        window.location.href = "{{ route('chair.approval') ?? '/chair/approval' }}";
+                    } else {
+                        tour.destroy();
+                    }
+                },
+
+                steps: [
+                    {
+                        element: '#tour-calendar-legend',
+                        popover: {
+                            title: 'Visual Tracking',
+                            description: 'The color coding helps you quickly see which protocols are at the Secretariat, Reviewers, Applicants, or Chair level.',
+                            side: "bottom",
+                            align: 'start'
+                        }
+                    },
+                    {
+                        element: '#tour-calendar-rules',
+                        popover: {
+                            title: 'Key Dates',
+                            description: 'Committee meeting days and application cut-off dates are marked here for quick reference.',
+                            side: "bottom",
+                            align: 'start'
+                        }
+                    },
+                    {
+                        element: '#tour-calendar-filters',
+                        popover: {
+                            title: 'Filter Views',
+                            description: 'Use these buttons to isolate specific statuses, such as applications waiting for final approval.',
+                            side: "bottom",
+                            align: 'start'
+                        }
+                    },
+                    {
+                        element: '#tour-calendar-grid',
+                        popover: {
+                            title: 'Interactive Grid',
+                            description: 'Click any day with an event to view protocols and deadlines scheduled on that date.',
+                            side: "top",
+                            align: 'start'
+                        }
+                    },
+                    {
+                        element: '#tour-calendar-sidebar',
+                        popover: {
+                            title: 'Monthly Summary',
+                            description: 'This area summarizes the month’s workload and lists upcoming assignments.',
+                            side: "left",
+                            align: 'start'
+                        }
+                    },
+                    {
+                        popover: {
+                            title: 'Next Stop: Final Approvals',
+                            description: 'After reviewers finish their assessments, protocols move to you for final decision-making.',
+                            side: "bottom",
+                            align: 'center',
+                            doneBtnText: 'Next Page →'
+                        }
+                    }
+                ]
+            });
+
+            tour.drive();
+        }
+
+        window.startPageTutorial = function () {
+            loadDriverThenRun(() => runChairCalendarTutorial(true));
+        };
+
+        loadDriverThenRun(() => {
+            const isFirstLogin = @json(auth()->user()->is_first_login);
+            const userId = @json(auth()->id());
+            const storageKey = 'berc_tutorial_step_' + userId;
+            const tourState = localStorage.getItem(storageKey);
+
+            if (!isFirstLogin) {
+                localStorage.removeItem(storageKey);
+                return;
+            }
+
+            if (tourState === 'chair_calendar') {
+                runChairCalendarTutorial(false);
             }
         });
+
+    });
     </script>
 @endpush

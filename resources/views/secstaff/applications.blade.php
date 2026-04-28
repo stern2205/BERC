@@ -486,6 +486,15 @@
                 </div>
 
                 <div class="flex items-center space-x-6 border-l border-gray-200 pl-6 py-4">
+                    <button type="button"
+                        onclick="startManualTutorial()"
+                        class="flex items-center gap-2 transition-all hover:-translate-y-0.5 text-gray-500 hover:text-bsu-dark">
+                    <svg class="w-4 h-4 shrink-0 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.228 9c.549-1.165 1.823-2 3.272-2 1.933 0 3.5 1.343 3.5 3 0 1.305-.973 2.416-2.333 2.83-.727.221-1.167.874-1.167 1.67M12 18h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
+                    </svg>
+                    <span>VIEW TUTORIAL</span>
+                </button>
                     <a href="{{ route('settings') }}"
                     class="flex items-center gap-2 transition-all hover:-translate-y-0.5 {{ request()->routeIs('settings') ? 'text-bsu-dark font-black' : 'text-gray-500 hover:text-bsu-dark' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1534,5 +1543,91 @@
         }
     }
     </script>
+<script>
+function startManualTutorial() {
+    if (typeof window.driver === 'undefined') {
+        console.error("Driver.js is missing on the Applications page!");
+        return;
+    }
+
+    const driver = window.driver.js.driver;
+
+    const tour = driver({
+        showProgress: true,
+        allowClose: true,
+        overlayColor: 'rgba(33, 60, 113, 0.75)',
+        nextBtnText: 'Next →',
+        prevBtnText: '← Back',
+
+        onDestroyStarted: () => {
+            if (!tour.hasNextStep()) {
+                closeModal();
+                tour.destroy();
+                window.location.href = "{{ route('secstaff.calendar') }}";
+            } else {
+                tour.destroy();
+            }
+        },
+
+        steps: [
+            {
+                element: '.app-card',
+                popover: {
+                    title: 'The Applications Queue',
+                    description: 'All newly submitted applications and resubmissions land here. When you click on a row, it opens the Document Verification panel.',
+                    side: "top",
+                    align: 'start',
+                    onNextClick: () => {
+                        openMockTutorialModal();
+                        tour.moveNext();
+                    }
+                }
+            },
+            {
+                element: '.payment-info-panel',
+                popover: {
+                    title: '1. The Checklist',
+                    description: 'Here you can verify the researcher’s payment details and see a checklist of every document they uploaded.',
+                    side: "right",
+                    align: 'start'
+                }
+            },
+            {
+                element: '.form-preview-panel',
+                popover: {
+                    title: '2. Document Preview',
+                    description: 'Clicking any document on the left will instantly display it here. You can review PDFs and images without downloading them.',
+                    side: "left",
+                    align: 'center'
+                }
+            },
+            {
+                element: '.modal-footer',
+                popover: {
+                    title: '3. The Final Verdict',
+                    description: 'If a document is missing or invalid, click Reject to return it. If everything looks good, click Verify to forward it to the Committee.',
+                    side: "top",
+                    align: 'center',
+                    onNextClick: () => {
+                        closeModal();
+                        tour.moveNext();
+                    }
+                }
+            },
+            {
+                popover: {
+                    title: 'Next Stop: The Calendar',
+                    description: 'Now that you know how to screen applications, let’s continue to the Calendar page.',
+                    side: "bottom",
+                    align: 'center',
+                    doneBtnText: 'Next Page →'
+                }
+            }
+        ]
+    });
+
+    tour.drive();
+}
+</script>
 </body>
 </html>

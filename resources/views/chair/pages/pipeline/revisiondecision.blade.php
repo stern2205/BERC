@@ -76,7 +76,7 @@
 <div x-data="decisionData(@js($protocolsData ?? []))" class="max-w-7xl mx-auto pb-6 animate-in fade-in duration-500">
     <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <div>
-            <h1 class="text-2xl font-black text-bsu-dark uppercase tracking-tight">Chair Decision Validation</h1>
+            <h1 class="text-2xl font-black text-bsu-dark uppercase tracking-tight">Chair Decision Validation (REVISIONS)</h1>
             <p class="text-gray-500 text-xs font-medium mt-1">Review and finalize drafted decision letters from the Secretariat</p>
         </div>
         <div class="w-full max-w-sm relative">
@@ -908,165 +908,187 @@ document.addEventListener('alpine:init', () => {
 
 <script>
 document.addEventListener('alpine:initialized', () => {
-    // 1. Dynamic CSS/JS Injection
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
         document.head.appendChild(css);
 
-        // Inject Driver Overrides
         const styleOverride = document.createElement('style');
         styleOverride.innerHTML = `
             .driver-popover { font-family: 'Inter', sans-serif !important; border-radius: 12px !important; border: 1px solid #E5E7EB !important; padding: 20px !important; }
             .driver-popover-title { color: #213C71 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; font-size: 14px !important; }
             .driver-popover-description { color: #6B7280 !important; font-weight: 500 !important; font-size: 12px !important; margin-top: 8px !important; line-height: 1.5 !important; }
             .driver-popover-footer button { border-radius: 8px !important; font-weight: 700 !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; padding: 8px 12px !important; }
-            .driver-popover-next-btn { background-color: #D32F2F !important; color: white !important; border: none !important; text-shadow: none !important; transition: all 0.2s ease !important; }
-            .driver-popover-next-btn:hover { background-color: #b91c1c !important; }
+            .driver-popover-next-btn { background-color: #D32F2F !important; color: white !important; border: none !important; text-shadow: none !important; }
             .driver-popover-prev-btn { background-color: #F3F4F6 !important; color: #4B5563 !important; border: none !important; }
-            .driver-popover-prev-btn:hover { background-color: #E5E7EB !important; }
         `;
         document.head.appendChild(styleOverride);
 
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = initTour;
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initTour();
     }
 
-    function initTour() {
+    function runChairRevisionsTutorial(manual = false) {
+        const userId = @json(auth()->id());
+        const storageKey = 'berc_tutorial_step_' + userId;
+
+        if (manual) {
+            localStorage.removeItem(storageKey);
+            localStorage.setItem(storageKey, 'chair_revisions');
+        }
+
+        const alpineRoot = document.querySelector('[x-data="decisionData(@js($protocolsData ?? []))"]');
+
+        if (!alpineRoot) {
+            console.error('decisionData Alpine component was not found.');
+            return;
+        }
+
+        const alpineComponent = Alpine.$data(alpineRoot);
+        const driver = window.driver.js.driver;
+
+        const tour = driver({
+            showProgress: true,
+            allowClose: manual ? true : false,
+            overlayColor: 'rgba(33, 60, 113, 0.75)',
+            nextBtnText: 'Next →',
+            prevBtnText: '← Back',
+
+            onDestroyStarted: () => {
+                if (alpineComponent.closeModal) {
+                    alpineComponent.closeModal();
+                }
+
+                if (!tour.hasNextStep()) {
+                    localStorage.setItem(storageKey, 'chair_staff');
+                    tour.destroy();
+                    window.location.href = "{{ route('chair.add-staff') ?? '/chair/staff' }}";
+                } else {
+                    tour.destroy();
+                }
+            },
+
+            steps: [
+                {
+                    element: '#tour-revisions-list',
+                    popover: {
+                        title: 'Revision Approvals',
+                        description: 'Validated resubmitted protocols appear here for your final approval.',
+                        side: "top",
+                        align: 'start',
+                        onNextClick: () => {
+                            alpineComponent.openValidate({
+                                is_mock: true,
+                                id: '2026-MOCK-RESUB',
+                                version: 'V2',
+                                title: 'Effects of AI on System Architecture',
+                                proponent: 'Dr. Jane Doe',
+                                revisionRows: [
+                                    {
+                                        id: 1,
+                                        item: '1.4',
+                                        berc_recommendation: 'Update methodology.',
+                                        researcher_response: 'Updated as requested.',
+                                        section_and_page: 'Page 4',
+                                        action: 'action_required',
+                                        remarks: '',
+                                        synthesized_comments: 'Researcher failed to update section 2.3.'
+                                    }
+                                ]
+                            });
+
+                            setTimeout(() => tour.moveNext(), 300);
+                        }
+                    }
+                },
+                {
+                    element: '#tour-revisions-sidebar',
+                    popover: {
+                        title: 'Navigate Documents',
+                        description: 'Use this sidebar to read revised documents or switch between the Decision Letter and feedback history.',
+                        side: "right",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#tour-feedback-btn',
+                    popover: {
+                        title: 'Check Feedback History',
+                        description: 'This shows reviewer comments about the researcher’s revisions.',
+                        side: "right",
+                        align: 'center',
+                        onNextClick: () => {
+                            alpineComponent.activeView = 'resubmission_form';
+                            setTimeout(() => tour.moveNext(), 300);
+                        }
+                    }
+                },
+                {
+                    element: '#tour-resubmission-panel',
+                    popover: {
+                        title: 'Synthesized Feedback',
+                        description: 'Reviewer comments are consolidated into this table for easier checking.',
+                        side: "left",
+                        align: 'center',
+                        onNextClick: () => {
+                            alpineComponent.activeView = 'decision_letter';
+                            setTimeout(() => tour.moveNext(), 300);
+                        }
+                    }
+                },
+                {
+                    element: '#tour-decision-panel',
+                    popover: {
+                        title: 'Finalize the Letter',
+                        description: 'Verify the final Decision Letter and submit it to close the workflow.',
+                        side: "left",
+                        align: 'center'
+                    }
+                },
+                {
+                    popover: {
+                        title: 'Next Stop: Staff Management',
+                        description: 'Next, let’s look at managing committee members and system access.',
+                        side: "bottom",
+                        align: 'center',
+                        doneBtnText: 'Next Page →'
+                    }
+                }
+            ]
+        });
+
+        tour.drive();
+    }
+
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runChairRevisionsTutorial(true));
+    };
+
+    loadDriverThenRun(() => {
         const isFirstLogin = @json(auth()->user()->is_first_login);
         const userId = @json(auth()->id());
         const storageKey = 'berc_tutorial_step_' + userId;
+        const tourState = localStorage.getItem(storageKey);
 
         if (!isFirstLogin) {
             localStorage.removeItem(storageKey);
             return;
         }
 
-        const tourState = localStorage.getItem(storageKey);
-
         if (tourState === 'chair_revisions') {
-            const driver = window.driver.js.driver;
-
-            // Gain access to Alpine's state variables so we can force open the modal
-            const alpineComponent = Alpine.$data(document.querySelector('[x-data="decisionData(@js($protocolsData ?? []))"]'));
-
-            const tour = driver({
-                showProgress: true,
-                allowClose: false,
-                overlayColor: 'rgba(33, 60, 113, 0.75)',
-                nextBtnText: 'Next &rarr;',
-                prevBtnText: '&larr; Back',
-
-                onDestroyStarted: () => {
-                    if (!tour.hasNextStep()) {
-                        alpineComponent.closeModal();
-                        localStorage.setItem(storageKey, 'chair_staff');
-                        tour.destroy();
-                        window.location.href = "{{ route('chair.add-staff') ?? '/chair/staff' }}";
-                    } else {
-                        tour.destroy();
-                    }
-                },
-
-                steps: [
-                    {
-                        element: '#tour-revisions-list',
-                        popover: {
-                            title: 'Revision Approvals',
-                            description: 'When reviewers finish validating a resubmitted protocol, the final synthesized decision letter arrives in this queue for your approval.',
-                            side: "top",
-                            align: 'start',
-                            onNextClick: () => {
-                                // ── MOCK MODAL OPEN ──
-                                alpineComponent.openValidate({
-                                    is_mock: true,
-                                    id: '2026-MOCK-RESUB',
-                                    version: 'V2',
-                                    title: 'Effects of AI on System Architecture',
-                                    proponent: 'Dr. Jane Doe',
-                                    revisionRows: [
-                                        {
-                                            id: 1,
-                                            item: '1.4',
-                                            berc_recommendation: 'Update methodology.',
-                                            researcher_response: 'Updated as requested.',
-                                            section_and_page: 'Page 4',
-                                            action: 'action_required',
-                                            remarks: '',
-                                            synthesized_comments: 'Researcher failed to update section 2.3.'
-                                        }
-                                    ]
-                                });
-
-                                setTimeout(() => { tour.moveNext(); }, 300);
-                            }
-                        }
-                    },
-                    {
-                        element: '#tour-revisions-sidebar',
-                        popover: {
-                            title: '1. Navigate Documents',
-                            description: 'From this sidebar, you can read the newly revised protocol documents or toggle between the Decision Letter and the detailed Feedback history.',
-                            side: "right",
-                            align: 'start'
-                        }
-                    },
-                    {
-                        element: '#tour-feedback-btn',
-                        popover: {
-                            title: '2. Check Feedback History',
-                            description: 'Click this button to see exactly what the reviewers said about the researcher\'s revisions. This helps you understand why they recommended their final decision.',
-                            side: "right",
-                            align: 'center',
-                            onNextClick: () => {
-                                alpineComponent.activeView = 'resubmission_form';
-                                setTimeout(() => { tour.moveNext(); }, 300);
-                            }
-                        }
-                    },
-                    {
-                        element: '#tour-resubmission-panel',
-                        popover: {
-                            title: '3. Synthesized Feedback',
-                            description: 'Here, the Secretariat has consolidated all reviewer comments into a clean table for your review.',
-                            side: "left",
-                            align: 'center',
-                            onNextClick: () => {
-                                alpineComponent.activeView = 'decision_letter';
-                                setTimeout(() => { tour.moveNext(); }, 300);
-                            }
-                        }
-                    },
-                    {
-                        element: '#tour-decision-panel',
-                        popover: {
-                            title: '4. Finalize the Letter',
-                            description: 'After reviewing the feedback, you will verify the final Decision Letter here and submit it to close out the workflow.',
-                            side: "left",
-                            align: 'center'
-                        }
-                    },
-                    {
-                        // Floating popover
-                        popover: {
-                            title: 'Next Stop: Staff Management',
-                            description: 'That covers the review process! Next, let\'s look at how you manage your committee members and their access.',
-                            side: "bottom",
-                            align: 'center',
-                            doneBtnText: 'Next Page →'
-                        }
-                    }
-                ]
-            });
-
-            tour.drive();
+            runChairRevisionsTutorial(false);
         }
-    }
+    });
+
 });
 </script>
 @endsection

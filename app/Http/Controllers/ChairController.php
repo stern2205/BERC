@@ -160,6 +160,7 @@ class ChairController extends Controller
                 Reviewer::create([
                     'user_id'              => $user->id,
                     'name'                 => $user->name,
+                    // Keeps exact case ('Panel Expert') to satisfy your DB CHECK constraint
                     'type'                 => $request->role,
                     'panel'                => $panel,
                     'specialization'       => $specialization,
@@ -202,6 +203,7 @@ class ChairController extends Controller
                 ], 403);
             }
 
+            // Because your schema uses ON DELETE CASCADE for reviewers and login_logs,
             // deleting the User automatically wipes their reviewer profile and logs perfectly.
             $user->delete();
 
@@ -230,20 +232,22 @@ class ChairController extends Controller
         $user = auth()->user();
 
         // 1. Fetch pending applications with assessment forms and items
-        $rawApps = ResearchApplications::with([
-                'assignedReviewers',
-                'supplementaryDocuments',
-                'informedConsent',
-                'logs',
-                'assessmentForm.items', // Load assessment items
-            ])
-            ->where(function($query) {
-                $query->whereNotNull('external_consultant')
-                    ->orWhere('status', 'exempted_awaiting_chair_approval')
-                    ->orWhere('status', 'awaiting_approval');
-            })
-            ->orderBy('created_at', 'desc')
-            ->get();
+       $rawApps = ResearchApplications::with([
+            'assignedReviewers' => function ($query) {
+                $query->wherePivot('status', '!=', 'Rejected');
+            },
+            'supplementaryDocuments',
+            'informedConsent',
+            'logs',
+            'assessmentForm.items',
+        ])
+        ->where(function($query) {
+            $query->whereNotNull('external_consultant')
+                ->orWhere('status', 'exempted_awaiting_chair_approval')
+                ->orWhere('status', 'awaiting_approval');
+        })
+        ->orderBy('created_at', 'desc')
+        ->get();
 
         $protocolCodes = $rawApps->pluck('protocol_code')->toArray();
 

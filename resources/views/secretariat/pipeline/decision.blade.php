@@ -647,7 +647,7 @@ document.addEventListener('alpine:init', () => {
 
         canOpenDecision(protocol) {
             return this.getDecisionSchedule(protocol).meetingPassed;
-            // return true; // USE THIS FOR TESTING PURPOSES TO BYPASS MEETING SCHEDULE LOGIC
+            //return true; // USE THIS FOR TESTING PURPOSES TO BYPASS MEETING SCHEDULE LOGIC
         },
 
         getDraftingActionText(protocol) {
@@ -926,6 +926,7 @@ document.addEventListener('alpine:init', () => {
                 });
 
                 if (response.ok) {
+                    this.closeModal();
                     this.showNotification('Success', 'Decision letter finalized and routed successfully.', 'success');
                     setTimeout(() => { window.location.reload(); }, 1500);
                 } else {
@@ -945,7 +946,13 @@ document.addEventListener('alpine:init', () => {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
@@ -966,13 +973,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = () => initDecisionTour();
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initDecisionTour();
     }
 
-    function initDecisionTour(retries = 0) {
+    function runDecisionTutorial(manual = false, retries = 0) {
         const isFirstLogin = @json(auth()->check() ? auth()->user()->is_first_login : true);
         const userId = @json(auth()->id() ?? 1);
         const storageKey = 'berc_tutorial_step_' + userId;
@@ -981,28 +986,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const forceTour = urlParams.get('tour') === '1';
         let tourState = localStorage.getItem(storageKey);
 
-        if (forceTour) {
-            tourState = 'secretariat_decision';
-            localStorage.setItem(storageKey, tourState);
-        }
-
-        if (!isFirstLogin && tourState !== 'secretariat_decision' && !forceTour) {
+        if (tourState === 'secretariat_decision_manual_skip') {
             localStorage.removeItem(storageKey);
             return;
         }
 
-        if (tourState !== 'secretariat_decision') return;
+        if (manual || forceTour) {
+            tourState = 'secretariat_decision';
+            localStorage.setItem(storageKey, tourState);
+        }
+
+        if (!manual && !forceTour && !isFirstLogin) {
+            localStorage.removeItem(storageKey);
+            return;
+        }
+
+        if (!manual && !forceTour && tourState !== 'secretariat_decision') {
+            return;
+        }
+
         if (window.__decisionTourStarted) return;
 
         const rootEl = document.getElementById('decision-root');
         let alpine = null;
+
         try {
-            alpine = window.decisionAlpine || rootEl?.__x?.$data || rootEl?._x_dataStack?.[0] || (window.Alpine ? window.Alpine.$data(rootEl) : null);
+            alpine = window.decisionAlpine ||
+                rootEl?.__x?.$data ||
+                rootEl?._x_dataStack?.[0] ||
+                (window.Alpine ? window.Alpine.$data(rootEl) : null);
         } catch (e) {}
 
         if (!rootEl || !alpine || typeof window.driver === 'undefined') {
             if (retries < 40) {
-                setTimeout(() => initDecisionTour(retries + 1), 250);
+                setTimeout(() => runDecisionTutorial(manual, retries + 1), 250);
             } else {
                 console.error('Tutorial aborted: Could not hook into Alpine or Driver.js.');
             }
@@ -1016,23 +1033,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tour = driver({
             showProgress: true,
-            allowClose: false,
+            allowClose: manual ? true : false,
             overlayColor: 'rgba(33, 60, 113, 0.75)',
             nextBtnText: 'Next →',
             prevBtnText: '← Back',
 
             onDestroyStarted: () => {
                 if (!tour.hasNextStep()) {
+
+                    if (manual) {
+                        localStorage.setItem(storageKey, 'secretariat_revision_validation_manual_skip');
+                        tour.destroy();
+                        window.location.href = "{{ route('secretariat.revision_validation') }}";
+                        return;
+                    }
+
                     localStorage.setItem(storageKey, 'secretariat_revision_validation');
                     tour.destroy();
                     window.location.href = "{{ route('secretariat.revision_validation') }}";
+
                 } else {
                     tour.destroy();
                 }
             },
 
             onDestroyed: () => {
-                alpine.closeModal();
+                if (alpine.closeModal) {
+                    alpine.closeModal();
+                }
+
                 alpine.activeTab = 'drafting';
                 alpine.activeView = 'decision_letter';
                 window.__decisionTourStarted = false;
@@ -1110,6 +1139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     { name: 'Dr. Cruz' }
                                 ]
                             });
+
                             setTimeout(() => tour.moveNext(), 350);
                         }
                     }
@@ -1248,6 +1278,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tour.drive();
         }, 300);
     }
+
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runDecisionTutorial(true));
+    };
+
+    loadDriverThenRun(() => runDecisionTutorial(false));
 });
 </script>
 @endsection

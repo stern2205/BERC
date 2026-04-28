@@ -81,102 +81,184 @@
 
                 <div class="flex flex-1 overflow-x-auto hide-scroll space-x-1 mr-4">
 
-                    <a href="{{ route('dashboard') }}" x-show="!isPipelineRoute" x-cloak @click="protocolMenuOpen = false; resubmissionMenuOpen = false;"
-                    class="flex items-center gap-2 px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest transition border-b-[3px] shrink-0
-                    {{ request()->routeIs('dashboard') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red' }}">
-                        <svg class="w-4 h-4 {{ request()->routeIs('dashboard') ? 'text-bsu-dark' : 'text-brand-red' }} shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4m-4 0a1 1 0 001-1v-4a1 1 0 00-1-1h-2a1 1 0 00-1 1v4a1 1 0 001 1h2z"></path>
-                        </svg>
-                        <span>Dashboard</span>
-                    </a>
+                    <!-- NORMAL NAV -->
+                    <template x-if="!protocolMenuOpen && !resubmissionMenuOpen">
+                        <div class="flex items-stretch space-x-1">
 
-                    <a href="{{ route('secretariat.calendar') }}" x-show="!isPipelineRoute" x-cloak @click="protocolMenuOpen = false; resubmissionMenuOpen = false;"
-                    class="flex items-center gap-2 px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest transition border-b-[3px] shrink-0
-                    {{ request()->routeIs('calendar') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red' }}">
-                        <svg class="w-4 h-4 {{ request()->routeIs('calendar') ? 'text-bsu-dark' : 'text-brand-red' }} shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                        <span>Calendar</span>
-                    </a>
+                            <a href="{{ route('dashboard') }}"
+                            x-show="!isPipelineRoute"
+                            x-cloak
+                            class="flex items-center gap-2 px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest transition border-b-[3px] shrink-0
+                            {{ request()->routeIs('dashboard') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red' }}">
 
-                    <a href="{{ route('dashboard') }}" x-show="isPipelineRoute" x-cloak
-                    class="flex items-center gap-2 px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest transition border-b-[3px] border-transparent text-gray-500 hover:text-bsu-dark hover:border-brand-red border-r border-gray-100 shrink-0">
-                        <svg class="w-4 h-4 text-brand-red shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        <span>Back To Dashboard</span>
-                    </a>
+                                <svg class="w-4 h-4 {{ request()->routeIs('dashboard') ? 'text-bsu-dark' : 'text-brand-red' }} shrink-0"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4m-4 0a1 1 0 001-1v-4a1 1 0 00-1-1h-2a1 1 0 00-1 1v4a1 1 0 001 1h2z"></path>
+                                </svg>
 
-                    <div class="flex items-stretch shrink-0">
-                        <button type="button" x-show="!protocolMenuOpen" x-cloak @click="protocolMenuOpen = true; resubmissionMenuOpen = false;"
-                                class="flex items-center gap-2 px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest transition border-b-[3px]
-                                {{ request()->routeIs('pipeline.evaluation', 'pipeline.assessment', 'pipeline.decision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red' }}">
-                            <svg class="w-4 h-4 {{ request()->routeIs('pipeline.evaluation', 'pipeline.assessment', 'pipeline.decision') ? 'text-bsu-dark' : 'text-brand-red' }} shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <span>PROTOCOL MANAGEMENT</span>
-                            <svg class="w-3 h-3 shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </button>
+                                <span>Dashboard</span>
+                            </a>
 
-                        <div x-show="protocolMenuOpen" x-cloak
-                            x-transition:enter="transition-all duration-200 ease-out" x-transition:enter-start="opacity-0 max-w-0" x-transition:enter-end="opacity-100 max-w-[1400px]"
-                            x-transition:leave="transition-all duration-150 ease-in" x-transition:leave-start="opacity-100 max-w-[1400px]" x-transition:leave-end="opacity-0 max-w-0"
-                            class="flex items-stretch overflow-hidden bg-white border-r border-gray-100">
+                            <a href="{{ route('secretariat.calendar') }}"
+                            x-show="!isPipelineRoute"
+                            x-cloak
+                            class="flex items-center gap-2 px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest transition border-b-[3px] shrink-0
+                            {{ request()->routeIs('calendar') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red' }}">
 
-                            <button type="button" @click="protocolMenuOpen = false" class="flex items-center justify-center px-4 py-3.5 border-b-[3px] border-transparent hover:text-bsu-dark hover:border-brand-red transition-all text-gray-500 bg-gray-50 shrink-0">
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                <svg class="w-4 h-4 {{ request()->routeIs('calendar') ? 'text-bsu-dark' : 'text-brand-red' }} shrink-0"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+
+                                <span>Calendar</span>
+                            </a>
+
+                            <a href="{{ route('dashboard') }}"
+                            x-show="isPipelineRoute"
+                            x-cloak
+                            class="flex items-center gap-2 px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest transition border-b-[3px] border-transparent text-gray-500 hover:text-bsu-dark hover:border-brand-red shrink-0">
+
+                                <svg class="w-4 h-4 text-brand-red shrink-0"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                </svg>
+
+                                <span>Back To Dashboard</span>
+                            </a>
+
+                            <button type="button"
+                                    @click="protocolMenuOpen = true; resubmissionMenuOpen = false;"
+                                    class="flex items-center gap-2 px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest transition border-b-[3px] shrink-0
+                                    {{ request()->routeIs('pipeline.evaluation', 'pipeline.assessment', 'pipeline.decision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red' }}">
+
+                                <svg class="w-4 h-4 {{ request()->routeIs('pipeline.evaluation', 'pipeline.assessment', 'pipeline.decision') ? 'text-bsu-dark' : 'text-brand-red' }} shrink-0"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+
+                                <span>PROTOCOL MANAGEMENT</span>
+
+                                <svg class="w-3 h-3 shrink-0 text-gray-500"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7"></path>
+                                </svg>
                             </button>
 
-                            <a href="{{ route('secretariat.evaluation') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.evaluation') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
-                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Review Classification</span>
-                            </a>
-                            <a href="{{ route('secretariat.assessment') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.assessment') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
-                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Assessment Forms</span>
-                            </a>
-                            <a href="{{ route('secretariat.decision') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.decision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
-                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Decision Letter</span>
-                            </a>
-                            <a href="{{ route('secretariat.reports') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.assessment') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
-                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">History</span>
-                            </a>
-                        </div>
-                    </div>
+                            <button type="button"
+                                    @click="resubmissionMenuOpen = true; protocolMenuOpen = false;"
+                                    class="flex items-center gap-2 px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest transition border-b-[3px] shrink-0
+                                    {{ request()->routeIs('pipeline.revision', 'pipeline.revision_decision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red' }}">
 
-                    <div class="flex items-stretch shrink-0">
-                        <button type="button" x-show="!resubmissionMenuOpen" x-cloak @click="resubmissionMenuOpen = true; protocolMenuOpen = false;"
-                                class="flex items-center gap-2 px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest transition border-b-[3px]
-                                {{ request()->routeIs('pipeline.revision', 'pipeline.revision_decision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red' }}">
-                            <svg class="w-4 h-4 {{ request()->routeIs('pipeline.revision', 'pipeline.revision_decision') ? 'text-bsu-dark' : 'text-brand-red' }} shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                            </svg>
-                            <span>RESUBMISSION</span>
-                            <svg class="w-3 h-3 shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </button>
+                                <svg class="w-4 h-4 {{ request()->routeIs('pipeline.revision', 'pipeline.revision_decision') ? 'text-bsu-dark' : 'text-brand-red' }} shrink-0"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
 
-                        <div x-show="resubmissionMenuOpen" x-cloak
-                            x-transition:enter="transition-all duration-200 ease-out" x-transition:enter-start="opacity-0 max-w-0" x-transition:enter-end="opacity-100 max-w-[1400px]"
-                            x-transition:leave="transition-all duration-150 ease-in" x-transition:leave-start="opacity-100 max-w-[1400px]" x-transition:leave-end="opacity-0 max-w-0"
-                            class="flex items-stretch overflow-hidden bg-white">
+                                <span>RESUBMISSION</span>
 
-                            <button type="button" @click="resubmissionMenuOpen = false" class="flex items-center justify-center px-4 py-3.5 border-b-[3px] border-transparent hover:text-bsu-dark hover:border-brand-red transition-all text-gray-500 bg-gray-50 shrink-0">
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                <svg class="w-3 h-3 shrink-0 text-gray-500"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7"></path>
+                                </svg>
                             </button>
 
-                            <a href="{{ route('secretariat.revision_validation') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.revision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
-                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Validation</span>
-                            </a>
-                            <a href="{{ route('secretariat.revision_forms') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.revision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
-                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Forms</span>
-                            </a>
-                            <a href="{{ route('secretariat.revision.decision') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.revision_decision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
-                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Decision Letter</span>
-                            </a>
                         </div>
-                    </div>
+                    </template>
+
+                    <!-- PROTOCOL MANAGEMENT MENU ONLY -->
+                    <template x-if="protocolMenuOpen">
+                        <div class="flex items-stretch overflow-hidden bg-white">
+
+                            <button type="button"
+                                    @click="protocolMenuOpen = false"
+                                    class="flex items-center gap-2 px-5 py-3.5 border-b-[3px] border-transparent hover:text-bsu-dark hover:border-brand-red transition-all text-gray-500 bg-gray-50 shrink-0">
+
+                                <svg class="w-4 h-4 shrink-0"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 19l-7-7 7-7"></path>
+                                </svg>
+
+                                <span>Back</span>
+                            </button>
+
+                            <a href="{{ route('secretariat.evaluation') }}"
+                            class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.evaluation') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Review Classification</span>
+                            </a>
+
+                            <a href="{{ route('secretariat.assessment') }}"
+                            class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.assessment') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Assessment Forms</span>
+                            </a>
+
+                            <a href="{{ route('secretariat.decision') }}"
+                            class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.decision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Decision Letter</span>
+                            </a>
+
+                            <a href="{{ route('secretariat.reports') }}"
+                            class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('secretariat.reports') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
+                                <span class="text-[11px] font-bold uppercase tracking-wider">History</span>
+                            </a>
+
+                        </div>
+                    </template>
+
+                    <!-- RESUBMISSION MENU ONLY -->
+                    <template x-if="resubmissionMenuOpen">
+                        <div class="flex items-stretch overflow-hidden bg-white">
+
+                            <button type="button"
+                                    @click="resubmissionMenuOpen = false"
+                                    class="flex items-center gap-2 px-5 py-3.5 border-b-[3px] border-transparent hover:text-bsu-dark hover:border-brand-red transition-all text-gray-500 bg-gray-50 shrink-0">
+
+                                <svg class="w-4 h-4 shrink-0"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 19l-7-7 7-7"></path>
+                                </svg>
+
+                                <span>Back</span>
+                            </button>
+
+                            <a href="{{ route('secretariat.revision_validation') }}"
+                            class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.revision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Validation</span>
+                            </a>
+
+                            <a href="{{ route('secretariat.revision_forms') }}"
+                            class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.revision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Forms</span>
+                            </a>
+
+                            <a href="{{ route('secretariat.revision.decision') }}"
+                            class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.revision_decision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Decision Letter</span>
+                            </a>
+
+                        </div>
+                    </template>
 
                 </div>
 
                 <div class="flex shrink-0 items-center space-x-6 border-l border-gray-100 pl-6 py-4 ml-auto">
+                    <button type="button"
+                            onclick="playCurrentPageTutorial()"
+                            class="flex items-center gap-2 transition-all hover:-translate-y-0.5 text-gray-500 hover:text-bsu-dark">
+                        <svg class="w-4 h-4 shrink-0 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8.228 9c.549-1.165 1.823-2 3.272-2 1.933 0 3.5 1.343 3.5 3 0 1.305-.973 2.416-2.333 2.83-.727.221-1.167.874-1.167 1.67M12 18h.01M12 3a9 9 0 100 18 9 9 0 000-18z"/>
+                        </svg>
+                        <span>VIEW TUTORIAL</span>
+                    </button>
                     <a href="{{ route('settings') }}" class="flex items-center gap-2 transition-all hover:-translate-y-0.5 {{ request()->routeIs('settings') ? 'text-bsu-dark font-black' : 'text-gray-500 hover:text-bsu-dark' }}">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -340,6 +422,15 @@
             </div>
         </div>
     </div>
+    <script>
+    function playCurrentPageTutorial() {
+        if (typeof window.startPageTutorial === 'function') {
+            window.startPageTutorial(true);
+        } else {
+            alert('No tutorial is available for this page yet.');
+        }
+    }
+    </script>
 
     @stack('scripts')
 </body>

@@ -6,6 +6,7 @@ use App\Models\ResearchApplications;
 use App\Models\Reviewer;
 use App\Models\ResearchApplicationRevision;
 use App\Models\RevisionResponse;
+use App\Services\ReviewerDeadlineService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
@@ -14,8 +15,9 @@ use Carbon\Carbon;
 class ReviewerController extends Controller
 {
     //this function shows the list of pending review invitations for the logged-in reviewer. It first retrieves the authenticated user and their corresponding reviewer record. Then, it performs a database query to join the research applications with the application_reviewer pivot table to fetch only those applications that are assigned to the reviewer and have a status of "Pending". The selected data includes all columns from the research applications table as well as specific columns from the pivot table related to the reviewer's assignment status and dates. Finally, it returns a view that displays these pending invitations to the reviewer.
-    public function showInvitations(Request $request)
+    public function showInvitations(Request $request, ReviewerDeadlineService $deadlineService)
     {
+        $deadlineService->syncExpiredReviewers();
         $user = auth()->user();
         $reviewer = Reviewer::where('user_id', $user->id)->first();
 
@@ -124,6 +126,7 @@ class ReviewerController extends Controller
                     }
                 }
 
+                // --- NEW: SLOT THE REVIEWER INTO ICF ASSESSMENT ---
                 $icfForm = DB::table('icf_assessments')->where('protocol_code', $protocol_code)->first();
 
                 if ($icfForm) {
@@ -214,8 +217,9 @@ class ReviewerController extends Controller
         }
     }
 
-    public function showAssessment(Request $request)
+    public function showAssessment(Request $request, ReviewerDeadlineService $deadlineService)
     {
+        $deadlineService->syncExpiredReviewers();
         $user = auth()->user();
         $reviewer = Reviewer::where('user_id', $user->id)->first();
 
@@ -491,7 +495,16 @@ class ReviewerController extends Controller
                 if ($finalIcf->reviewer_3_id && $finalIcf->reviwer_3_done !== 'Done') $isIcfDone = false;
             }
 
-            if ($isProtocolDone && $isIcfDone) {
+            $activeReviewerStatuses = DB::table('application_reviewer')
+                ->where('protocol_code', $protocol_code)
+                ->where('status', '!=', 'Rejected')
+                ->pluck('status')
+                ->map(fn ($s) => strtolower(trim($s)));
+
+            $allConcernedReviewersAccepted = $activeReviewerStatuses->isNotEmpty()
+                && $activeReviewerStatuses->every(fn ($s) => $s === 'accepted');
+
+            if ($isProtocolDone && $isIcfDone && $allConcernedReviewersAccepted) {
                 DB::table('research_applications')
                     ->where('protocol_code', $protocol_code)
                     ->update(['status' => 'review_finished', 'updated_at' => now()]);
@@ -683,6 +696,7 @@ class ReviewerController extends Controller
             }
 
             // 5. CHECK IF ALL REVIEWERS ARE DONE FOR THIS REVISION
+            // We get all rows for this specific protocol and revision version
             $allRowsForThisRevision = RevisionResponse::where('protocol_code', $request->protocol_code)
                 ->where('revision_number', $request->revision_number)
                 ->get();

@@ -70,8 +70,8 @@
 <div id="revision-forms-root" x-data="resubmissionData(@js($protocolsData ?? []))" class="max-w-7xl mx-auto pb-6 animate-in fade-in duration-500">
     <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <div>
-            <h1 class="text-2xl font-black text-bsu-dark uppercase tracking-tight">Resubmission Validation</h1>
-            <p class="text-gray-500 text-xs font-medium mt-1">Secretariat Synthesis for completed revisions</p>
+            <h1 class="text-2xl font-black text-bsu-dark uppercase tracking-tight">Resubmission Form Validation</h1>
+            <p class="text-gray-500 text-xs font-medium mt-1">Secretariat Synthesis for completed revision reviews</p>
         </div>
         <div class="w-full max-w-sm relative">
             <input type="text" x-model="searchQuery" placeholder="Search ID, Title, or Proponent..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-bsu-dark focus:ring-1 focus:ring-bsu-dark transition-all">
@@ -833,7 +833,13 @@ document.addEventListener('alpine:init', () => {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
@@ -854,13 +860,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = () => initRevisionFormsTour();
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initRevisionFormsTour();
     }
 
-    function initRevisionFormsTour(retries = 0) {
+    function runRevisionFormsTutorial(manual = false, retries = 0) {
         const isFirstLogin = @json(auth()->check() ? auth()->user()->is_first_login : true);
         const userId = @json(auth()->id() ?? 1);
         const storageKey = 'berc_tutorial_step_' + userId;
@@ -869,28 +873,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const forceTour = urlParams.get('tour') === '1';
         let tourState = localStorage.getItem(storageKey);
 
-        if (forceTour) {
-            tourState = 'secretariat_revision_forms';
-            localStorage.setItem(storageKey, tourState);
-        }
-
-        if (!isFirstLogin && tourState !== 'secretariat_revision_forms' && !forceTour) {
+        if (tourState === 'secretariat_revision_forms_manual_skip') {
             localStorage.removeItem(storageKey);
             return;
         }
 
-        if (tourState !== 'secretariat_revision_forms') return;
+        if (manual || forceTour) {
+            tourState = 'secretariat_revision_forms';
+            localStorage.setItem(storageKey, tourState);
+        }
+
+        if (!manual && !forceTour && !isFirstLogin) {
+            localStorage.removeItem(storageKey);
+            return;
+        }
+
+        if (!manual && !forceTour && tourState !== 'secretariat_revision_forms') {
+            return;
+        }
+
         if (window.__revisionFormsTourStarted) return;
 
         const rootEl = document.getElementById('revision-forms-root');
         let alpine = null;
+
         try {
-            alpine = window.revisionFormsAlpine || rootEl?.__x?.$data || rootEl?._x_dataStack?.[0] || (window.Alpine ? window.Alpine.$data(rootEl) : null);
+            alpine = window.revisionFormsAlpine ||
+                rootEl?.__x?.$data ||
+                rootEl?._x_dataStack?.[0] ||
+                (window.Alpine ? window.Alpine.$data(rootEl) : null);
         } catch (e) {}
 
         if (!rootEl || !alpine || typeof window.driver === 'undefined') {
             if (retries < 40) {
-                setTimeout(() => initRevisionFormsTour(retries + 1), 250);
+                setTimeout(() => runRevisionFormsTutorial(manual, retries + 1), 250);
             } else {
                 console.error('Tutorial aborted: Could not hook into Alpine or Driver.js.');
             }
@@ -942,23 +958,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tour = driver({
             showProgress: true,
-            allowClose: false,
+            allowClose: manual ? true : false,
             overlayColor: 'rgba(33, 60, 113, 0.75)',
             nextBtnText: 'Next →',
             prevBtnText: '← Back',
 
             onDestroyStarted: () => {
                 if (!tour.hasNextStep()) {
+
+                    if (manual) {
+                        localStorage.setItem(storageKey, 'secretariat_revision_decision_manual_skip');
+                        tour.destroy();
+                        window.location.href = "{{ route('secretariat.revision.decision') }}";
+                        return;
+                    }
+
                     localStorage.setItem(storageKey, 'secretariat_revision_decision');
                     tour.destroy();
                     window.location.href = "{{ route('secretariat.revision.decision') }}";
+
                 } else {
                     tour.destroy();
                 }
             },
 
             onDestroyed: () => {
-                alpine.closeModal();
+                if (alpine.closeModal) {
+                    alpine.closeModal();
+                }
+
                 window.__revisionFormsTourStarted = false;
             },
 
@@ -1050,6 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 alpine.selectedProtocol.revisionRows[2].action = 'action_required';
                                 alpine.triggerAutosave();
                             }
+
                             setTimeout(() => tour.moveNext(), 300);
                         }
                     }
@@ -1079,6 +1108,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tour.drive();
         }, 300);
     }
+
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runRevisionFormsTutorial(true));
+    };
+
+    loadDriverThenRun(() => runRevisionFormsTutorial(false));
 });
 </script>
 @endsection

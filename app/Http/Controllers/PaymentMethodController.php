@@ -88,6 +88,7 @@ class PaymentMethodController extends Controller
 
         $validated['is_active'] = filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN);
 
+        // --- NEW LOGIC: Handle Explicit Logo Removal ---
         if ($request->has('remove_logo') && $request->remove_logo == 'true') {
             if ($method->logo_path && File::exists(public_path($method->logo_path))) {
                 File::delete(public_path($method->logo_path));

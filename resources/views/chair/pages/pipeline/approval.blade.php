@@ -1330,160 +1330,182 @@
 
 <script>
 document.addEventListener('alpine:initialized', () => {
-    // 1. Dynamic CSS/JS Injection
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
         document.head.appendChild(css);
 
-        // Inject Driver Overrides dynamically
         const styleOverride = document.createElement('style');
         styleOverride.innerHTML = `
             .driver-popover { font-family: 'Inter', sans-serif !important; border-radius: 12px !important; border: 1px solid #E5E7EB !important; padding: 20px !important; }
             .driver-popover-title { color: #213C71 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; font-size: 14px !important; }
             .driver-popover-description { color: #6B7280 !important; font-weight: 500 !important; font-size: 12px !important; margin-top: 8px !important; line-height: 1.5 !important; }
             .driver-popover-footer button { border-radius: 8px !important; font-weight: 700 !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; padding: 8px 12px !important; }
-            .driver-popover-next-btn { background-color: #D32F2F !important; color: white !important; border: none !important; text-shadow: none !important; transition: all 0.2s ease !important; }
-            .driver-popover-next-btn:hover { background-color: #b91c1c !important; }
+            .driver-popover-next-btn { background-color: #D32F2F !important; color: white !important; border: none !important; text-shadow: none !important; }
             .driver-popover-prev-btn { background-color: #F3F4F6 !important; color: #4B5563 !important; border: none !important; }
-            .driver-popover-prev-btn:hover { background-color: #E5E7EB !important; }
         `;
         document.head.appendChild(styleOverride);
 
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = initTour;
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initTour();
     }
 
-    function initTour() {
+    function runChairApprovalTutorial(manual = false) {
+        const userId = @json(auth()->id());
+        const storageKey = 'berc_tutorial_step_' + userId;
+
+        if (manual) {
+            localStorage.removeItem(storageKey);
+            localStorage.setItem(storageKey, 'chair_approval');
+        }
+
+        const alpineRoot = document.querySelector('[x-data="chairApprovalData()"]');
+
+        if (!alpineRoot) {
+            console.error('chairApprovalData() Alpine component was not found.');
+            return;
+        }
+
+        const alpineComponent = Alpine.$data(alpineRoot);
+        const driver = window.driver.js.driver;
+
+        const tour = driver({
+            showProgress: true,
+            allowClose: manual ? true : false,
+            overlayColor: 'rgba(33, 60, 113, 0.75)',
+            nextBtnText: 'Next →',
+            prevBtnText: '← Back',
+
+            onDestroyStarted: () => {
+                if (alpineComponent.closeReviewModal) {
+                    alpineComponent.closeReviewModal();
+                }
+
+                if (alpineComponent.closeConsultantModal) {
+                    alpineComponent.closeConsultantModal();
+                }
+
+                if (!tour.hasNextStep()) {
+                    localStorage.setItem(storageKey, 'chair_revisions');
+                    tour.destroy();
+                    window.location.href = "{{ route('chair.revision.decision') ?? '/chair/revisions' }}";
+                } else {
+                    tour.destroy();
+                }
+            },
+
+            steps: [
+                {
+                    element: '#tour-approval-tabs',
+                    popover: {
+                        title: 'Approval Queues',
+                        description: 'This area has queues for final decision letters and external consultant requests.',
+                        side: "bottom",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#tour-approval-list',
+                    popover: {
+                        title: 'Decision Letters',
+                        description: 'Clicking an item opens the decision letter template for final validation.',
+                        side: "top",
+                        align: 'start',
+                        onNextClick: () => {
+                            alpineComponent.activeTab = 'decision_letter';
+
+                            alpineComponent.openReviewModal({
+                                is_mock: true,
+                                id: '2026-MOCK-DL',
+                                title: 'AI Ethics in Academia',
+                                proponent: 'Dr. John Smith',
+                                status: 'awaiting_approval'
+                            });
+
+                            setTimeout(() => tour.moveNext(), 300);
+                        }
+                    }
+                },
+                {
+                    element: '#tour-decision-panel',
+                    popover: {
+                        title: 'Drafting the Letter',
+                        description: 'Review, edit, approve, or reject the generated decision letter before sending it to the researcher.',
+                        side: "left",
+                        align: 'center',
+                        onNextClick: () => {
+                            alpineComponent.closeReviewModal();
+                            alpineComponent.activeTab = 'external_consultant';
+
+                            alpineComponent.openConsultantModal({
+                                is_mock: true,
+                                id: '2026-MOCK-EC',
+                                title: 'Advanced Robotics and Human Interaction',
+                                proponent: 'Dr. Emmett Brown',
+                                external_consultant: 'Needs expert in mechanical engineering to verify hardware safety.'
+                            });
+
+                            setTimeout(() => tour.moveNext(), 400);
+                        }
+                    }
+                },
+                {
+                    element: '#tour-consultant-form',
+                    popover: {
+                        title: 'External Consultants',
+                        description: 'Review the Secretariat request, then create and assign a temporary consultant account if approved.',
+                        side: "top",
+                        align: 'center',
+                        onNextClick: () => {
+                            alpineComponent.closeConsultantModal();
+                            setTimeout(() => tour.moveNext(), 300);
+                        }
+                    }
+                },
+                {
+                    popover: {
+                        title: 'Next Stop: Revision Approvals',
+                        description: 'Accepted resubmissions return to you for final revision approval.',
+                        side: "bottom",
+                        align: 'center',
+                        doneBtnText: 'Next Page →'
+                    }
+                }
+            ]
+        });
+
+        tour.drive();
+    }
+
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runChairApprovalTutorial(true));
+    };
+
+    loadDriverThenRun(() => {
         const isFirstLogin = @json(auth()->user()->is_first_login);
         const userId = @json(auth()->id());
         const storageKey = 'berc_tutorial_step_' + userId;
+        const tourState = localStorage.getItem(storageKey);
 
         if (!isFirstLogin) {
             localStorage.removeItem(storageKey);
             return;
         }
 
-        const tourState = localStorage.getItem(storageKey);
-
         if (tourState === 'chair_approval') {
-            const driver = window.driver.js.driver;
-
-            // Gain access to Alpine's state variables so we can force open the modals
-            const alpineComponent = Alpine.$data(document.querySelector('[x-data="chairApprovalData()"]'));
-
-            const tour = driver({
-                showProgress: true,
-                allowClose: false,
-                overlayColor: 'rgba(33, 60, 113, 0.75)',
-                nextBtnText: 'Next &rarr;',
-                prevBtnText: '&larr; Back',
-
-                onDestroyStarted: () => {
-                    if (!tour.hasNextStep()) {
-                        // Clean up mock modals before leaving
-                        alpineComponent.closeReviewModal();
-                        alpineComponent.closeConsultantModal();
-
-                        localStorage.setItem(storageKey, 'chair_revisions');
-                        tour.destroy();
-                        window.location.href = "{{ route('chair.revision.decision') ?? '/chair/revisions' }}";
-                    } else {
-                        tour.destroy();
-                    }
-                },
-
-                steps: [
-                    {
-                        element: '#tour-approval-tabs',
-                        popover: {
-                            title: 'Approval Queues',
-                            description: 'You have two queues here. "Decision Letters" are protocols that have been reviewed and need your final approval. "External Consultant" are requests from the Secretariat to add a specialist to a review panel.',
-                            side: "bottom",
-                            align: 'start'
-                        }
-                    },
-                    {
-                        element: '#tour-approval-list',
-                        popover: {
-                            title: 'Decision Letters',
-                            description: 'Clicking on an item in this list will open the Decision Letter template for you to finalize the status.',
-                            side: "top",
-                            align: 'start',
-                            onNextClick: () => {
-                                // ── MOCK REVIEW MODAL OPEN ──
-                                alpineComponent.activeTab = 'decision_letter';
-                                alpineComponent.openReviewModal({
-                                    is_mock: true,
-                                    id: '2026-MOCK-DL',
-                                    title: 'AI Ethics in Academia',
-                                    proponent: 'Dr. John Smith',
-                                    status: 'awaiting_approval'
-                                });
-
-                                setTimeout(() => { tour.moveNext(); }, 300);
-                            }
-                        }
-                    },
-                    {
-                        element: '#tour-decision-panel',
-                        popover: {
-                            title: 'Drafting the Letter',
-                            description: 'This template is automatically generated based on the reviewers\' feedback. You can edit the text, change the decision status (Approved/Rejected), and then validate it to send it to the researcher.',
-                            side: "left",
-                            align: 'center',
-                            onNextClick: () => {
-                                // Close the review modal, switch tabs, and open the consultant modal
-                                alpineComponent.closeReviewModal();
-                                alpineComponent.activeTab = 'external_consultant';
-
-                                // ── MOCK CONSULTANT MODAL OPEN ──
-                                alpineComponent.openConsultantModal({
-                                    is_mock: true,
-                                    id: '2026-MOCK-EC',
-                                    title: 'Advanced Robotics and Human Interaction',
-                                    proponent: 'Dr. Emmett Brown',
-                                    external_consultant: 'Needs expert in mechanical engineering to verify hardware safety.'
-                                });
-
-                                setTimeout(() => { tour.moveNext(); }, 400);
-                            }
-                        }
-                    },
-                    {
-                        element: '#tour-consultant-form',
-                        popover: {
-                            title: 'External Consultants',
-                            description: 'When the Secretariat requests a consultant, you will see their reasoning. If you approve, fill out this form to generate a temporary account and assign them to the protocol.',
-                            side: "top",
-                            align: 'center',
-                            onNextClick: () => {
-                                alpineComponent.closeConsultantModal();
-                                setTimeout(() => { tour.moveNext(); }, 300);
-                            }
-                        }
-                    },
-                    {
-                        // Floating popover
-                        popover: {
-                            title: 'Next Stop: Revision Approvals',
-                            description: 'What happens when a researcher resubmits their work and the reviewers accept it? It comes back to you. Let\'s look at Revision Approvals next.',
-                            side: "bottom",
-                            align: 'center',
-                            doneBtnText: 'Next Page →'
-                        }
-                    }
-                ]
-            });
-
-            tour.drive();
+            runChairApprovalTutorial(false);
         }
-    }
+    });
+
 });
 </script>
 @endsection

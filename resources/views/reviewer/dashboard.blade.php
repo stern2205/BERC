@@ -256,125 +256,145 @@
 </div>
 
 <script>
-    // ───────────────── TUTORIAL LOGIC (REVIEWER DASHBOARD) ─────────────────
-    document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
 
-        // 1. Dynamic Injection: Ensure Driver.js is loaded even if the layout missed it
-        if (typeof window.driver === 'undefined') {
-            const css = document.createElement('link');
-            css.rel = 'stylesheet';
-            css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
-            document.head.appendChild(css);
-
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-            script.onload = initTour;
-            document.head.appendChild(script);
-        } else {
-            initTour();
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
         }
 
-        function initTour() {
-            const isFirstLogin = @json(auth()->user()->is_first_login ?? false);
-            const userId = @json(auth()->id());
-            const storageKey = 'berc_tutorial_step_' + userId;
+        const css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
+        document.head.appendChild(css);
 
-            if (!isFirstLogin) {
-                localStorage.removeItem(storageKey);
-                return;
-            }
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
 
-            const tourState = localStorage.getItem(storageKey);
+    function runReviewerDashboardTutorial(manual = false) {
+        const isFirstLogin = @json(auth()->user()->is_first_login ?? false);
+        const userId = @json(auth()->id());
+        const storageKey = 'berc_tutorial_step_' + userId;
 
-            if (!tourState || tourState === 'dashboard') {
-                const driver = window.driver.js.driver;
-                const tour = driver({
-                    showProgress: true,
-                    allowClose: false,
-                    overlayColor: 'rgba(33, 60, 113, 0.75)',
-                    nextBtnText: 'Next &rarr;',
-                    prevBtnText: '&larr; Back',
-
-                    onDestroyStarted: () => {
-                        if (!tour.hasNextStep()) {
-                            localStorage.setItem(storageKey, 'rev_calendar');
-                            tour.destroy();
-                            window.location.href = "{{ route('reviewer.calendar') ?? '/reviewer/calendar' }}";
-                        } else {
-                            tour.destroy();
-                        }
-                    },
-
-                    steps: [
-                        {
-                            element: '#rv-notice',
-                            popover: {
-                                title: 'Welcome Reviewer!',
-                                description: 'This is your central hub. Urgent notifications regarding pending or overdue assignments will always appear right here at the top.',
-                                side: "bottom",
-                                align: 'start'
-                            }
-                        },
-                        {
-                            element: '#tour-stats',
-                            popover: {
-                                title: 'Your Workload',
-                                description: 'Keep track of how many active reviews you currently have and easily spot if you have missed any deadlines.',
-                                side: "bottom",
-                                align: 'center'
-                            }
-                        },
-                        {
-                            element: '#tour-invitations-btn',
-                            popover: {
-                                title: 'Manage Invitations',
-                                description: 'When the Secretariat assigns you a new protocol to review, it lands here first. You must accept the invitation before you can read the full document.',
-                                side: "bottom",
-                                align: 'start'
-                            }
-                        },
-                        {
-                            element: '#tour-assessment-btn',
-                            popover: {
-                                title: 'Conduct Assessments',
-                                description: 'Once you accept an invitation, the protocol moves here. This is where you will read the actual files, fill out your assessment form, and cast your vote.',
-                                side: "bottom",
-                                align: 'start'
-                            }
-                        },
-                        {
-                            element: '#tour-resubmission-btn',
-                            popover: {
-                                title: 'Review Resubmissions',
-                                description: 'When a researcher resubmits an updated protocol based on previous feedback, you will review their changes here.',
-                                side: "bottom",
-                                align: 'start'
-                            }
-                        },
-                        {
-                            element: '#tour-snapshot',
-                            popover: {
-                                title: 'Quick Access',
-                                description: 'This table gives you a rapid overview of your active tasks and upcoming due dates so nothing slips through the cracks.',
-                                side: "top",
-                                align: 'start'
-                            }
-                        },
-                        {
-                            popover: {
-                                title: 'Next Stop: Calendar',
-                                description: 'Managing your deadlines is critical as a reviewer. Let\'s look at how you can visualize your schedule on the Calendar next.',
-                                side: "bottom",
-                                align: 'center',
-                                doneBtnText: 'Next Page →'
-                            }
-                        }
-                    ]
-                });
-
-                tour.drive();
-            }
+        if (manual) {
+            localStorage.removeItem(storageKey);
+            localStorage.setItem(storageKey, 'dashboard');
         }
-    });
+
+        if (!manual && !isFirstLogin) {
+            localStorage.removeItem(storageKey);
+            return;
+        }
+
+        const tourState = localStorage.getItem(storageKey);
+
+        if (!manual && tourState && tourState !== 'dashboard') {
+            return;
+        }
+
+        const driver = window.driver.js.driver;
+
+        const tour = driver({
+            showProgress: true,
+            allowClose: manual ? true : false,
+            overlayColor: 'rgba(33, 60, 113, 0.75)',
+            nextBtnText: 'Next →',
+            prevBtnText: '← Back',
+
+            onDestroyStarted: () => {
+                if (!tour.hasNextStep()) {
+                    if (manual) {
+                        localStorage.setItem(storageKey, 'rev_calendar_manual_skip');
+                    } else {
+                        localStorage.setItem(storageKey, 'rev_calendar');
+                    }
+
+                    tour.destroy();
+                    window.location.href = "{{ route('reviewer.calendar') ?? '/reviewer/calendar' }}";
+                } else {
+                    tour.destroy();
+                }
+            },
+
+            steps: [
+                {
+                    element: '#rv-notice',
+                    popover: {
+                        title: 'Welcome Reviewer!',
+                        description: 'This is your central hub. Urgent notifications regarding pending or overdue assignments will always appear right here at the top.',
+                        side: "bottom",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#tour-stats',
+                    popover: {
+                        title: 'Your Workload',
+                        description: 'Keep track of how many active reviews you currently have and easily spot if you have missed any deadlines.',
+                        side: "bottom",
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#tour-invitations-btn',
+                    popover: {
+                        title: 'Manage Invitations',
+                        description: 'When the Secretariat assigns you a new protocol to review, it lands here first. You must accept the invitation before you can read the full document.',
+                        side: "bottom",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#tour-assessment-btn',
+                    popover: {
+                        title: 'Conduct Assessments',
+                        description: 'Once you accept an invitation, the protocol moves here. This is where you will read the actual files, fill out your assessment form, and cast your vote.',
+                        side: "bottom",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#tour-resubmission-btn',
+                    popover: {
+                        title: 'Review Resubmissions',
+                        description: 'When a researcher resubmits an updated protocol based on previous feedback, you will review their changes here.',
+                        side: "bottom",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#tour-snapshot',
+                    popover: {
+                        title: 'Quick Access',
+                        description: 'This table gives you a rapid overview of your active tasks and upcoming due dates so nothing slips through the cracks.',
+                        side: "top",
+                        align: 'start'
+                    }
+                },
+                {
+                    popover: {
+                        title: 'Next Stop: Calendar',
+                        description: 'Managing your deadlines is critical as a reviewer. Let’s look at how you can visualize your schedule on the Calendar next.',
+                        side: "bottom",
+                        align: 'center',
+                        doneBtnText: 'Next Page →'
+                    }
+                }
+            ]
+        });
+
+        tour.drive();
+    }
+
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runReviewerDashboardTutorial(true));
+    };
+
+    loadDriverThenRun(() => runReviewerDashboardTutorial(false));
+});
 </script>
 @endsection

@@ -11,6 +11,7 @@ use App\Models\AssessmentFormItem;
 use App\Models\InformedConsentItem;
 use App\Models\Reviewer;
 use App\Models\DecisionLetter;
+use App\Services\ReviewerDeadlineService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
@@ -21,13 +22,14 @@ class SecretariatController extends Controller
 {
     //this shows the review classification page of the secretariat and fetches all the protocols that are currently in the documents checking, awaiting reviewer approval, exempted awaiting chair approval, or under review status. It also calculates the current review cycle based on the second Wednesday of the month and fetches the reviewers along with their current workload of assigned reviews. Finally, it passes all this data to the view for rendering.
     //this function has a submodule in ResearchApplicationStatusController that handles the classification of the protocols and updates their status accordingly based on the secretariat's input.
-    public function showProtocolEvaluation(Request $request)
+    public function showProtocolEvaluation(Request $request, ReviewerDeadlineService $deadlineService)
     {
+        $deadlineService->syncExpiredReviewers();
         $user = auth()->user();
         $protocol_code = $request->query('protocol_code');
 
         // 1. Fetch Proposals
-        $proposals = ResearchApplications::with(['logs.user', 'assignedReviewers'])
+        $proposals = ResearchApplications::with(['logs.user', 'assignedReviewers', 'assessmentForm'])
             ->whereIn('status', [
                 'documents_checking',
                 'awaiting_reviewer_approval',
@@ -46,9 +48,13 @@ class SecretariatController extends Controller
                     'classifiedDate' => $p->updated_at->toIso8601String(),
                     'receiver' => $logEntry && $logEntry->user ? $logEntry->user->name : 'Unassigned',
                     'status' => $p->status,
+                    'assessmentStatus' => ($p->assessmentForm)->status,
                     'classification' => $p->review_classification,
 
-                    'assignedReviewers' => $p->assignedReviewers->map(function($r) {
+                    'assignedReviewers' => $p->assignedReviewers()
+                        ->where('status', '!=', 'Rejected')
+                        ->get()
+                        ->map(function($r) use ($p) {
                         $assignedDate = Carbon::parse($r->pivot->date_assigned);
                         $expiredDate = $r->pivot->date_expired
                             ? Carbon::parse($r->pivot->date_expired)->toIso8601String()
@@ -58,13 +64,27 @@ class SecretariatController extends Controller
                             'id' => $r->id,
                             'name' => $r->name,
                             'status' => $r->pivot->status ?? 'Pending',
+                            'done' => $this->getReviewerDoneStatus($p->protocol_code, $r->id),
+                            'assessmentStatus' => $this->getReviewerDoneStatus($p->protocol_code, $r->id) === 'Done' ? 'submitted' : null,
                             'dateAssigned' => $assignedDate->toIso8601String(),
                             'dateExpired' => $expiredDate,
                             'dateAccepted' => $r->pivot->date_accepted ? Carbon::parse($r->pivot->date_accepted)->toIso8601String() : null,
                             'dateDeclined' => $r->pivot->date_declined ? Carbon::parse($r->pivot->date_declined)->toIso8601String() : null,
                             'declinedReason' => $r->pivot->declined_reason ?? null,
                         ];
-                    })->toArray()
+                    })->toArray(),
+                    'rejectedReviewers' => $p->assignedReviewers()
+                        ->where('status', 'Rejected')
+                        ->get()
+                        ->map(function($r) {
+                            return [
+                                'id' => $r->id,
+                                'name' => $r->name,
+                                'status' => 'Rejected',
+                                'dateRejected' => $r->pivot->updated_at,
+                            ];
+                        })
+                        ->toArray(),
                 ];
             });
 
@@ -92,7 +112,7 @@ class SecretariatController extends Controller
                       ->orWhere(function ($q) use ($cycleStart) {
                           $q->where('application_reviewer.date_assigned', '>=', $cycleStart)
                             // But do NOT count them if the reviewer declined or expired.
-                            ->whereNotIn('application_reviewer.status', ['Declined', 'Expired']);
+                            ->whereNotIn('application_reviewer.status', ['Declined', 'Expired', 'Rejected']);
                       });
             })
             ->get()
@@ -144,6 +164,21 @@ class SecretariatController extends Controller
             'reviewers',
             'consultants'
         ));
+    }
+
+    private function getReviewerDoneStatus($protocolCode, $reviewerId)
+    {
+        $form = DB::table('assessment_forms')
+            ->where('protocol_code', $protocolCode)
+            ->first();
+
+        if (!$form) return null;
+
+        if ((int) $form->reviewer_1_id === (int) $reviewerId) return $form->reviewer_1_done;
+        if ((int) $form->reviewer_2_id === (int) $reviewerId) return $form->reviewer_2_done;
+        if ((int) $form->reviewer_3_id === (int) $reviewerId) return $form->reviewer_3_done;
+
+        return null;
     }
 
     //this function shows the assessment form evaluation page of the secretariat
@@ -284,6 +319,7 @@ class SecretariatController extends Controller
 
             $applicationReviewers = DB::table('application_reviewer')
                 ->where('protocol_code', $protocolCode)
+                ->where('status', '!=', 'Rejected')
                 ->get()
                 ->keyBy('reviewer_id');
 
@@ -366,7 +402,7 @@ class SecretariatController extends Controller
                 'id' => $protocolCode,
                 'title' => $protocol->research_title ?? 'Untitled Protocol',
                 'proponent' => $protocol->name_of_researcher ?? 'N/A',
-                'dateSubmitted' => $protocol->created_at ? $protocol->created_at->toIso8601String() : null,
+                'dateSubmitted' => $protocol->updated_at ? $protocol->updated_at->toIso8601String() : null,
                 'classification' => $protocol->review_classification ?? 'N/A',
                 'reviewers' => $reviewers,
                 'hasInformedConsent' => !is_null($iForm),

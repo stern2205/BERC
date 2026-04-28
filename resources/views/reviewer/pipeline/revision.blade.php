@@ -871,151 +871,168 @@ document.addEventListener('alpine:init', () => {
 
 <script>
 document.addEventListener('alpine:initialized', () => {
-    // 1. Dynamic CSS/JS Injection
-    if (typeof window.driver === 'undefined') {
+
+    function loadDriverThenRun(callback) {
+        if (typeof window.driver !== 'undefined') {
+            callback();
+            return;
+        }
+
         const css = document.createElement('link');
         css.rel = 'stylesheet';
         css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css';
         document.head.appendChild(css);
 
-        // Inject Driver Overrides dynamically
-        const styleOverride = document.createElement('style');
-        styleOverride.innerHTML = `
-            .driver-popover { font-family: 'Inter', sans-serif !important; border-radius: 12px !important; border: 1px solid #E5E7EB !important; padding: 20px !important; }
-            .driver-popover-title { color: #213C71 !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; font-size: 14px !important; }
-            .driver-popover-description { color: #6B7280 !important; font-weight: 500 !important; font-size: 12px !important; margin-top: 8px !important; line-height: 1.5 !important; }
-            .driver-popover-footer button { border-radius: 8px !important; font-weight: 700 !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; padding: 8px 12px !important; }
-            .driver-popover-next-btn { background-color: #D32F2F !important; color: white !important; border: none !important; text-shadow: none !important; transition: all 0.2s ease !important; }
-            .driver-popover-next-btn:hover { background-color: #b91c1c !important; }
-            .driver-popover-prev-btn { background-color: #F3F4F6 !important; color: #4B5563 !important; border: none !important; }
-            .driver-popover-prev-btn:hover { background-color: #E5E7EB !important; }
-        `;
-        document.head.appendChild(styleOverride);
-
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js';
-        script.onload = initTour;
+        script.onload = callback;
         document.head.appendChild(script);
-    } else {
-        initTour();
     }
 
-    function initTour() {
+    function runReviewerResubmissionsTutorial(manual = false) {
         const isFirstLogin = @json(auth()->user()->is_first_login);
         const userId = @json(auth()->id());
         const storageKey = 'berc_tutorial_step_' + userId;
 
-        if (!isFirstLogin) {
+        if (manual) {
+            localStorage.removeItem(storageKey);
+            localStorage.setItem(storageKey, 'rev_resubmissions');
+        }
+
+        if (!manual && !isFirstLogin) {
             localStorage.removeItem(storageKey);
             return;
         }
 
         const tourState = localStorage.getItem(storageKey);
 
-        if (tourState === 'rev_resubmissions') {
-            const driver = window.driver.js.driver;
-            const alpineComponent = Alpine.$data(document.querySelector('[x-data="revisionData()"]'));
+        if (tourState === 'rev_resubmissions_manual_skip') {
+            localStorage.removeItem(storageKey);
+            return;
+        }
 
-            const tour = driver({
-                showProgress: true,
-                allowClose: false,
-                overlayColor: 'rgba(33, 60, 113, 0.75)',
-                nextBtnText: 'Next &rarr;',
-                prevBtnText: '&larr; Back',
+        if (!manual && tourState !== 'rev_resubmissions') {
+            return;
+        }
 
-                onDestroyStarted: () => {
-                    if (!tour.hasNextStep()) {
-                        alpineComponent.closeModal();
+        const driver = window.driver.js.driver;
+        const alpineComponent = Alpine.$data(document.querySelector('[x-data="revisionData()"]'));
 
-                        // Final step: Move them to the Settings page to force password change!
-                        localStorage.setItem(storageKey, 'rev_settings');
+        const tour = driver({
+            showProgress: true,
+            allowClose: manual ? true : false,
+            overlayColor: 'rgba(33, 60, 113, 0.75)',
+            nextBtnText: 'Next →',
+            prevBtnText: '← Back',
+
+            onDestroyStarted: () => {
+                if (!tour.hasNextStep()) {
+                    alpineComponent.closeModal();
+
+                    if (manual) {
+                        localStorage.setItem(storageKey, 'rev_settings_manual_skip');
                         tour.destroy();
-                        window.location.href = "{{ route('settings') }}";
-                    } else {
-                        tour.destroy();
+                        return;
+                    }
+
+                    localStorage.setItem(storageKey, 'rev_settings');
+                    tour.destroy();
+                    window.location.href = "{{ route('settings') }}";
+                } else {
+                    tour.destroy();
+                }
+            },
+
+            steps: [
+                {
+                    element: '#tour-resub-tabs',
+                    popover: {
+                        title: 'Validating Revisions',
+                        description: 'When an applicant resubmits a protocol that you previously returned for modifications, it will appear in the To Validate tab.',
+                        side: "bottom",
+                        align: 'start',
+                        onNextClick: () => {
+                            alpineComponent.openValidate({
+                                is_mock: true,
+                                id: '2026-MOCK-003',
+                                version: 'V2',
+                                title: 'AI System Architecture',
+                                proponent: 'Dr. Jane Doe',
+                                rows: [
+                                    {
+                                        id: 999,
+                                        item: '1.4',
+                                        berc_recommendation: 'Please clarify your sampling method.',
+                                        researcher_response: 'Updated the methodology in section 2.',
+                                        section_and_page: 'Page 4',
+                                        action: '',
+                                        remarks: ''
+                                    }
+                                ]
+                            });
+
+                            setTimeout(() => {
+                                tour.moveNext();
+                            }, 300);
+                        }
                     }
                 },
+                {
+                    element: '#tour-resub-sidebar',
+                    popover: {
+                        title: '1. Review the New Files',
+                        description: 'Just like the main assessment, you can use this sidebar to open and read the researcher’s newly uploaded documents.',
+                        side: "right",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#tour-resub-form',
+                    popover: {
+                        title: '2. Check Their Responses',
+                        description: 'The validation table shows exactly what you asked them to change and what their response was. You only need to re-check the flagged items.',
+                        side: "left",
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#tour-resub-footer',
+                    popover: {
+                        title: '3. Final Verdict',
+                        description: 'For each row, use the dropdown to mark it as Resolved or still Action Required, then submit your validation.',
+                        side: "top",
+                        align: 'center',
+                        onNextClick: () => {
+                            alpineComponent.closeModal();
 
-                steps: [
-                    {
-                        element: '#tour-resub-tabs',
-                        popover: {
-                            title: 'Validating Revisions',
-                            description: 'When an applicant resubmits a protocol that you previously returned for modifications, it will appear in the "To Validate" tab.',
-                            side: "bottom",
-                            align: 'start',
-                            onNextClick: () => {
-                                // ── MOCK MODAL OPEN ──
-                                alpineComponent.openValidate({
-                                    is_mock: true,
-                                    id: '2026-MOCK-003',
-                                    version: 'V2',
-                                    title: 'AI System Architecture',
-                                    proponent: 'Dr. Jane Doe',
-                                    rows: [
-                                        {
-                                            id: 999,
-                                            item: '1.4',
-                                            berc_recommendation: 'Please clarify your sampling method.',
-                                            researcher_response: 'Updated the methodology in section 2.',
-                                            section_and_page: 'Page 4',
-                                            action: '',
-                                            remarks: ''
-                                        }
-                                    ]
-                                });
-
-                                setTimeout(() => { tour.moveNext(); }, 300);
-                            }
-                        }
-                    },
-                    {
-                        element: '#tour-resub-sidebar',
-                        popover: {
-                            title: '1. Review the New Files',
-                            description: 'Just like the main assessment, you can use this sidebar to open and read the researcher\'s newly uploaded documents.',
-                            side: "right",
-                            align: 'start'
-                        }
-                    },
-                    {
-                        element: '#tour-resub-form',
-                        popover: {
-                            title: '2. Check Their Responses',
-                            description: 'The validation table shows exactly what you asked them to change, and what their response was. You do not need to re-evaluate the entire protocol—only the flagged items.',
-                            side: "left",
-                            align: 'center'
-                        }
-                    },
-                    {
-                        element: '#tour-resub-footer',
-                        popover: {
-                            title: '3. Final Verdict',
-                            description: 'For each row, use the dropdown to mark it as "Resolved" or flag it as still needing "Action Required", then submit your validation.',
-                            side: "top",
-                            align: 'center',
-                            onNextClick: () => {
-                                alpineComponent.closeModal();
-                                setTimeout(() => { tour.moveNext(); }, 300);
-                            }
-                        }
-                    },
-                    {
-                        // Floating popover for the grand finale
-                        popover: {
-                            title: 'Final Step: Account Security 🔒',
-                            description: 'You have completed the system tour! Because you are using a default, auto-generated password, your final requirement is to update it. Click below to proceed to your Account Settings.',
-                            side: "bottom",
-                            align: 'center',
-                            doneBtnText: 'Update Password →'
+                            setTimeout(() => {
+                                tour.moveNext();
+                            }, 300);
                         }
                     }
-                ]
-            });
+                },
+                {
+                    popover: {
+                        title: manual ? 'Tutorial Complete' : 'Final Step: Account Security 🔒',
+                        description: manual
+                            ? 'You have finished the Reviewer Resubmissions tutorial.'
+                            : 'You have completed the system tour. Because you are using a default, auto-generated password, your final requirement is to update it.',
+                        side: "bottom",
+                        align: 'center',
+                        doneBtnText: manual ? 'Finish' : 'Update Password →'
+                    }
+                }
+            ]
+        });
 
-            tour.drive();
-        }
+        tour.drive();
     }
+
+    window.startPageTutorial = function () {
+        loadDriverThenRun(() => runReviewerResubmissionsTutorial(true));
+    };
+
+    loadDriverThenRun(() => runReviewerResubmissionsTutorial(false));
 });
 </script>
 @endsection
