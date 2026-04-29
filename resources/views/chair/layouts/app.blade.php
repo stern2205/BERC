@@ -217,7 +217,7 @@
                         For Approval
                     </a>
                     <a href="{{ route('chair.revision.decision') }}" @click="isNavDrawerOpen = false; mobileProtocolOpen = false" class="block pl-9 pr-5 py-3 text-[10px] font-bold transition-colors {{ request()->routeIs('reports') ? 'text-bsu-dark bg-white border-l-4 border-brand-red' : 'hover:text-bsu-dark hover:bg-gray-100' }}">
-                        Revisions
+                        Resubmission Decision Letter
                     </a>
                     <a href="{{ route('chair.add-staff') }}" @click="isNavDrawerOpen = false; mobileProtocolOpen = false" class="block pl-9 pr-5 py-3 text-[10px] font-bold transition-colors {{ request()->routeIs('add-staff') ? 'text-bsu-dark bg-white border-l-4 border-brand-red' : 'hover:text-bsu-dark hover:bg-gray-100' }}">
                         Staff
