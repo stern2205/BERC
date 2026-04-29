@@ -317,10 +317,10 @@
 
                 <div x-show="mobileResubmissionOpen" x-collapse x-cloak class="bg-gray-50 border-t border-b border-gray-100">
                     <a href="{{ route('secretariat.revision_validation') }}" @click="isNavDrawerOpen = false; mobileResubmissionOpen = false" class="block pl-9 pr-5 py-3 text-[10px] font-bold transition-colors {{ request()->routeIs('pipeline.revision') ? 'text-bsu-dark bg-white border-l-4 border-brand-red' : 'hover:text-bsu-dark hover:bg-gray-100' }}">
-                        Validation
+                        Resubmission Validation
                     </a>
                     <a href="{{ route('secretariat.revision_forms') }}" @click="isNavDrawerOpen = false; mobileResubmissionOpen = false" class="block pl-9 pr-5 py-3 text-[10px] font-bold transition-colors {{ request()->routeIs('pipeline.revision') ? 'text-bsu-dark bg-white border-l-4 border-brand-red' : 'hover:text-bsu-dark hover:bg-gray-100' }}">
-                        Form
+                        Resubmission Forms
                     </a>
                     <a href="{{ route('secretariat.revision.decision') }}" @click="isNavDrawerOpen = false; mobileResubmissionOpen = false" class="block pl-9 pr-5 py-3 text-[10px] font-bold transition-colors hover:text-bsu-dark hover:bg-gray-100">
                         Decision Letter

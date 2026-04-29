@@ -215,10 +215,10 @@
                         Invitation
                     </a>
                     <a href="{{ route('reviewer.assessment') }}" @click="isNavDrawerOpen = false; mobileProtocolOpen = false" class="block pl-9 pr-5 py-3 text-[10px] font-bold transition-colors text-gray-500 hover:text-bsu-dark hover:bg-gray-100">
-                        Assessment / Both Forms
+                        Assessment / ICF Forms
                     </a>
                     <a href="#" @click="isNavDrawerOpen = false; mobileProtocolOpen = false" class="block pl-9 pr-5 py-3 text-[10px] font-bold transition-colors text-gray-500 hover:text-bsu-dark hover:bg-gray-100">
-                        Resubmissions
+                        Resubmission Forms
                     </a>
                 </div>
 

@@ -187,7 +187,7 @@
                             <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">For Approval</span>
                         </a>
                         <a href="{{ route('chair.revision.decision') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] {{ request()->routeIs('approval') || request()->routeIs('pipeline.approval') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
-                            <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Resubmission Decision Letter</span>
+                            <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Resubmission Decisions/span>
                         </a>
                         <a href="{{ route('chair.add-staff') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] {{ request()->routeIs('add-staff') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
                             <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Staff</span>
@@ -258,7 +258,7 @@
                     For Approval
                 </a>
                 <a href="{{ route('chair.revision.decision') }}" class="block pl-9 pr-5 py-3 text-[10px] font-bold transition-colors {{ request()->routeIs('reports') ? 'text-bsu-dark bg-white border-l-4 border-brand-red' : 'hover:text-bsu-dark hover:bg-gray-100' }}">
-                    Revisions
+                    Resubmission Decisions
                 </a>
                 <a href="{{ route('chair.add-staff') }}" class="block pl-9 pr-5 py-3 text-[10px] font-bold transition-colors {{ request()->routeIs('add-staff') ? 'text-bsu-dark bg-white border-l-4 border-brand-red' : 'hover:text-bsu-dark hover:bg-gray-100' }}">
                     Staff

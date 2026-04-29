@@ -46,6 +46,82 @@
     .analytics-card-body { padding: 16px; }
     .accent-dot-blue { width: 8px; height: 8px; border-radius: 50%; background: #213C71; flex-shrink: 0; }
     .accent-dot-red { width: 8px; height: 8px; border-radius: 50%; background: #D32F2F; flex-shrink: 0; }
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 12mm;
+        }
+
+        html, body {
+            width: 100%;
+            height: auto;
+            background: white;
+        }
+
+        body * {
+            visibility: hidden !important;
+        }
+
+        #tour-analytics,
+        #tour-analytics * {
+            visibility: visible !important;
+        }
+
+        #tour-analytics {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+        }
+
+        #tour-analytics .btn-print,
+        #tour-analytics .analytics-print-exclude {
+            display: none !important;
+        }
+
+        #tour-analytics .grid {
+            display: block !important;
+        }
+
+        #tour-analytics .grid > * {
+            width: 100% !important;
+            margin-bottom: 12px !important;
+        }
+
+        #tour-analytics .analytics-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            margin-bottom: 12px !important;
+            box-shadow: none !important;
+        }
+
+        #tour-analytics canvas {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        #tour-analytics table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            page-break-inside: auto;
+        }
+
+        #tour-analytics tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        #tour-analytics thead {
+            display: table-header-group;
+        }
+
+        #tour-analytics tfoot {
+            display: table-footer-group;
+        }
+    }
 </style>
 
 @php
