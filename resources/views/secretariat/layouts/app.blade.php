@@ -231,12 +231,12 @@
 
                             <a href="{{ route('secretariat.revision_validation') }}"
                             class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.revision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
-                                <span class="text-[11px] font-bold uppercase tracking-wider">Validation</span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Resubmission Validation</span>
                             </a>
 
                             <a href="{{ route('secretariat.revision_forms') }}"
                             class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] shrink-0 {{ request()->routeIs('pipeline.revision') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
-                                <span class="text-[11px] font-bold uppercase tracking-wider">Forms</span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Resubmission Forms</span>
                             </a>
 
                             <a href="{{ route('secretariat.revision.decision') }}"

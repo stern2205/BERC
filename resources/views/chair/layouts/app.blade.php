@@ -153,7 +153,7 @@
                                 <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">For Approval</span>
                             </a>
                             <a href="{{ route('chair.revision.decision') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] {{ request()->routeIs('approval') || request()->routeIs('pipeline.approval') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
-                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Revisions</span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Resubmission Decision Letter</span>
                             </a>
                             <a href="{{ route('chair.add-staff') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] {{ request()->routeIs('add-staff') ? 'text-bsu-dark border-brand-red bg-white' : 'text-gray-500 border-transparent hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50' }}">
                                 <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Staff</span>

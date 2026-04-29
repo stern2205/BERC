@@ -153,10 +153,10 @@
                                 <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Invitation</span>
                             </a>
                             <a href="{{ route('reviewer.assessment') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] border-transparent text-gray-500 hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50">
-                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Assessment / Both Forms</span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Assessment / ICF Forms</span>
                             </a>
                             <a href="{{ route('reviewer.resubmissions') }}" class="flex items-center px-5 py-3.5 whitespace-nowrap transition border-b-[3px] border-transparent text-gray-500 hover:text-bsu-dark hover:border-brand-red hover:bg-gray-50">
-                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Resubmissions</span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider leading-tight">Resubmission Forms</span>
                             </a>
                         </div>
                     </div>
