@@ -653,22 +653,24 @@
                 <td style="padding: 10px; border-left: none; border-top: none; vertical-align: top;">
                     <div class="checkbox-wrapper">
                         <span class="box" style="display: flex; justify-content: center; align-items: center; font-weight: bold;">
-                            {{ !empty($questionnaire) ? '✔' : '' }}
+                            {{ $questionnaire->isNotEmpty() ? '✔' : '' }}
                         </span>
                         <span class="cb-label">Questionnaire (if applicable)</span>
                     </div>
+
                     <div class="checkbox-wrapper">
                         <span class="box" style="display: flex; justify-content: center; align-items: center; font-weight: bold;">
-                            {{ !empty($dataCollection) ? '✔' : '' }}
+                            {{ $dataCollection->isNotEmpty() ? '✔' : '' }}
                         </span>
                         <span class="cb-label">Data Collection Forms (if applicable)</span>
                     </div>
-                        <div class="checkbox-wrapper">
-                            <span class="box" style="display: flex; justify-content: center; align-items: center; font-weight: bold;">
-                                {{ !empty($productBrochure) ? '✔' : '' }}
-                            </span>
-                            <span class="cb-label">Product Brochure (if applicable)</span>
-                        </div>
+
+                    <div class="checkbox-wrapper">
+                        <span class="box" style="display: flex; justify-content: center; align-items: center; font-weight: bold;">
+                            {{ $productBrochure->isNotEmpty() ? '✔' : '' }}
+                        </span>
+                        <span class="cb-label">Product Brochure (if applicable)</span>
+                    </div>
 
                         <div class="checkbox-wrapper">
                             <span class="box" style="display: flex; justify-content: center; align-items: center; font-weight: bold;">
