@@ -15,6 +15,7 @@
                     colors: {
                         'brand-red': '#D32F2F',
                         'brand-blue': '#4a72ff',
+                        'bsu-dark': '#1f377a',
                     }
                 }
             }
@@ -263,10 +264,10 @@
                     <img src="{{ asset('logo/BERC.png') }}" alt="BSU Logo" class="h-10 sm:h-7 w-auto object-contain shrink-0">
                 </div>
                 <div class="flex flex-col justify-center ml-3 sm:ml-4 border-l-2 border-gray-200 pl-3 sm:pl-5 py-1">
-                    <h1 class="text-[11px] sm:text-[15px] font-bold text-[#1f377a] leading-none tracking-tight uppercase">
+                    <h1 class="text-[11px] sm:text-[15px] font-bold text-bsu-dark leading-none tracking-tight uppercase">
                         Batangas State University - TNEU
                     </h1>
-                    <h2 class="text-[9px] sm:text-[10px] font-bold text-red-600 tracking-[0.18em] uppercase mt-1 sm:mt-1.5">
+                    <h2 class="text-[9px] sm:text-[10px] font-bold text-brand-red tracking-[0.18em] uppercase mt-1 sm:mt-1.5">
                         Ethics Review Committee
                     </h2>
                 </div>
@@ -276,7 +277,7 @@
                 <a href="/" class="hover:text-blue-900 transition-colors">Home</a>
                 <a href="/#facts" class="hover:text-blue-900 transition-colors">Facts</a>
                 <a href="/#about" class="hover:text-blue-900 transition-colors">About</a>
-                <a href="{{ route('login.form') }}" class="bg-[#1f377a] text-white px-5 py-2 rounded-sm hover:bg-blue-800 transition shadow-sm">
+                <a href="{{ route('login.form') }}" class="bg-bsu-dark text-white px-5 py-2 rounded-sm hover:bg-blue-800 transition shadow-sm">
                     Login
                 </a>
             </div>
@@ -293,7 +294,7 @@
                 <a href="/" class="hover:text-blue-900 transition-colors py-1">Home</a>
                 <a href="/#facts" class="hover:text-blue-900 transition-colors py-1">Facts</a>
                 <a href="/#about" class="hover:text-blue-900 transition-colors py-1">About</a>
-                <a href="{{ route('login.form') }}" class="mt-1 bg-[#1f377a] text-white text-center px-5 py-2.5 rounded hover:bg-blue-800 transition shadow-sm">
+                <a href="{{ route('login.form') }}" class="mt-1 bg-bsu-dark text-white text-center px-5 py-2.5 rounded hover:bg-blue-800 transition shadow-sm">
                     Login
                 </a>
             </div>
@@ -347,7 +348,8 @@
                     </div>
                 @endif
 
-                <form action="{{ route('signup.submit') }}"
+                <form id="registrationForm"
+                      action="{{ route('signup.submit') }}"
                       method="POST"
                       enctype="multipart/form-data"
                       class="space-y-4">
@@ -407,8 +409,8 @@
                                style="color:#ff9b9b; text-decoration:none; font-weight:600;">Login</a>
                         </div>
 
-                        <button type="submit"
-                                onclick="return confirm('Account details look good? Click OK to proceed.')"
+                        <button type="button"
+                                id="triggerModalBtn"
                                 class="submit-btn">
                             Create Account
                         </button>
@@ -416,6 +418,41 @@
                 </form>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Centered Custom Confirmation Modal (Logout format, Blue colors) -->
+    <div id="confirmModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" id="modalBackdrop"></div>
+
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden transform transition-all scale-95 opacity-0" id="modalContent">
+            <div class="p-6 text-center">
+                <!-- Center Icon -->
+                <svg class="mx-auto mb-4 text-brand-blue w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+
+                <h3 class="mb-2 text-[13px] font-bold text-bsu-dark uppercase tracking-wide font-['Montserrat']">Confirm Details</h3>
+
+                <p class="text-xs text-gray-500 mb-6 leading-relaxed font-['Inter']">
+                    Account details look good?<br>
+                    Click proceed to create your account.
+                </p>
+
+                <div class="flex justify-center gap-3">
+                    <button type="button" id="cancelBtn"
+                        class="px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-gray-500 hover:bg-gray-100 rounded-lg transition font-['Montserrat']">
+                        Cancel
+                    </button>
+
+                    <button type="button" id="confirmBtn"
+                        class="px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest bg-brand-blue hover:bg-blue-700 text-white rounded-lg transition shadow-md font-['Montserrat']">
+                        Proceed
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -428,6 +465,7 @@
     </div>
 
     <script>
+        // Mobile Menu Logic
         var hamburger = document.getElementById('hamburger');
         var mobileMenu = document.getElementById('mobile-menu');
         var hb1 = document.getElementById('hb1');
@@ -441,6 +479,51 @@
             hb1.style.transform = menuOpen ? 'translateY(7px) rotate(45deg)' : '';
             hb2.style.opacity   = menuOpen ? '0' : '1';
             hb3.style.transform = menuOpen ? 'translateY(-7px) rotate(-45deg)' : '';
+        });
+
+        // Modal Logic
+        const form = document.getElementById('registrationForm');
+        const triggerModalBtn = document.getElementById('triggerModalBtn');
+        const confirmModal = document.getElementById('confirmModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const confirmBtn = document.getElementById('confirmBtn');
+
+        function openModal() {
+            // Check HTML5 validity first (required fields, email format)
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Show modal and trigger animations
+            confirmModal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            // Revert animations
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+
+            // Hide modal after transition completes
+            setTimeout(() => {
+                confirmModal.classList.add('hidden');
+            }, 200);
+        }
+
+        // Event Listeners for Modal
+        triggerModalBtn.addEventListener('click', openModal);
+        cancelBtn.addEventListener('click', closeModal);
+        modalBackdrop.addEventListener('click', closeModal);
+
+        // Submit form when Proceed is clicked
+        confirmBtn.addEventListener('click', function() {
+            form.submit();
         });
     </script>
 
