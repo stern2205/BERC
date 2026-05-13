@@ -306,6 +306,9 @@
                     <a href="{{ route('secretariat.decision') }}" @click="isNavDrawerOpen = false; mobileProtocolOpen = false" class="block pl-9 pr-5 py-3 text-[10px] font-bold transition-colors {{ request()->routeIs('pipeline.decision') ? 'text-bsu-dark bg-white border-l-4 border-brand-red' : 'hover:text-bsu-dark hover:bg-gray-100' }}">
                         Decision Letter
                     </a>
+                    <a href="{{ route('secretariat.reports') }}" @click="isNavDrawerOpen = false; mobileProtocolOpen = false" class="block pl-9 pr-5 py-3 text-[10px] font-bold transition-colors {{ request()->routeIs('pipeline.decision') ? 'text-bsu-dark bg-white border-l-4 border-brand-red' : 'hover:text-bsu-dark hover:bg-gray-100' }}">
+                        History
+                    </a>
                 </div>
 
                 <button type="button" @click="mobileResubmissionOpen = !mobileResubmissionOpen; mobileProtocolOpen = false;" class="w-full flex items-center justify-between px-5 py-4 focus:outline-none transition-colors {{ request()->routeIs('pipeline.revision', 'pipeline.revision_decision') ? 'text-bsu-dark bg-gray-50 border-l-4 border-brand-red' : 'text-gray-500 hover:bg-gray-50 hover:text-bsu-dark' }}">

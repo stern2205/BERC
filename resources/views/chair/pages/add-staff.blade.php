@@ -746,7 +746,7 @@ document.addEventListener('alpine:init', () => {
             };
 
             try {
-                const response = await fetch('/staff/store', {
+                const response = await fetch("{{ url('/staff/store') }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
