@@ -548,7 +548,7 @@ document.addEventListener('alpine:init', () => {
                     return;
                 }
 
-                const response = await fetch(`/documents/api/revision/${protocolCode}/${revNum}`);
+                const response = await fetch(`{{ url('/documents/api/revision') }}/${protocolCode}/${revNum}`);
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -665,7 +665,7 @@ document.addEventListener('alpine:init', () => {
             this.isLoading = true;
 
             try {
-                const response = await fetch('/api/secretariat/revision/validate', {
+                const response = await fetch('{{ url("/api/secretariat/revision/validate") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

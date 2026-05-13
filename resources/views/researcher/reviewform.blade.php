@@ -2049,7 +2049,7 @@
                     const formData = new FormData(form);
                     const token = document.querySelector('input[name="_token"]')?.value;
 
-                    const response = await fetch('/review-form', {
+                    const response = await fetch("{{ url('/review-form') }}", {
                         method: 'POST',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',

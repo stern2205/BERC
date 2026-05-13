@@ -806,7 +806,7 @@ document.addEventListener('alpine:init', () => {
 
             try {
                 // 👇 BULLETPROOF FETCH USING THE EXACT ENDPOINT & PROTOCOL CODE 👇
-                const response = await fetch(`/documents/api/revision/${protocol.id}/${revNum}`);
+                const response = await fetch(`{{ url('/documents/api/revision') }}/${protocol.id}/${revNum}`);
 
                 if (response.ok) {
                     const data = await response.json();
@@ -914,7 +914,7 @@ document.addEventListener('alpine:init', () => {
             };
 
             try {
-                const response = await fetch('/api/secretariat/resubmission/decision/save', {
+                const response = await fetch('{{ url("/api/secretariat/resubmission/decision/save") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

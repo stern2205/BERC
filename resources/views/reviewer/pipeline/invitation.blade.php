@@ -589,7 +589,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             try {
-                const fetchUrl = `/documents/api/${protocol.protocol_code}`;
+                const fetchUrl = `{{ url('/documents/api') }}/${protocol.protocol_code}`;
                 const response = await fetch(fetchUrl);
                 if (response.ok) {
                     const data = await response.json();
@@ -820,7 +820,7 @@ document.addEventListener('alpine:init', () => {
             if (actionType === 'decline') payload.decline_reason = String(this.declineReason);
 
             try {
-                const url = `/reviewer/protocol/${this.selectedProtocol.protocol_code}/respond`;
+                const url = `{{ url('/reviewer/protocol') }}/${this.selectedProtocol.protocol_code}/respond`;
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -916,7 +916,7 @@ document.addEventListener('alpine:init', () => {
                         }
 
                         tour.destroy();
-                        window.location.href = "{{ route('reviewer.assessment') ?? '/reviewer/assessment' }}";
+                        window.location.href = "{{ url('/reviewer/assessment') }}";
                     } else {
                         tour.destroy();
                     }

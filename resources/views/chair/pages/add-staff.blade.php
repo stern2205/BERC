@@ -793,12 +793,12 @@ document.addEventListener('alpine:init', () => {
             const deleteId = this.selectedStaff.id;
 
             try {
-                const response = await fetch(`/staff/${deleteId}`, {
-                   method: 'DELETE',
-                   headers: {
-                       'Accept': 'application/json',
-                       'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                   }
+                const response = await fetch(`{{ url('/staff') }}/${deleteId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
                 });
 
                 const result = await response.json();

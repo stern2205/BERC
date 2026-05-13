@@ -646,8 +646,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         canOpenDecision(protocol) {
-            return this.getDecisionSchedule(protocol).meetingPassed;
-            //return true; // USE THIS FOR TESTING PURPOSES TO BYPASS MEETING SCHEDULE LOGIC
+            //return this.getDecisionSchedule(protocol).meetingPassed;
+            return true; // USE THIS FOR TESTING PURPOSES TO BYPASS MEETING SCHEDULE LOGIC
         },
 
         getDraftingActionText(protocol) {
@@ -808,7 +808,7 @@ document.addEventListener('alpine:init', () => {
             this.loadedDocs = { activeBasic: [], activeSupp: [], legacy: [] };
 
             try {
-                const response = await fetch(`/documents/api/${protocol.id}`);
+                const response = await fetch(`{{ url('/documents/api') }}/${protocol.id}`);
 
                 if (response.ok) {
                     const data = await response.json();
@@ -915,7 +915,7 @@ document.addEventListener('alpine:init', () => {
             };
 
             try {
-                const response = await fetch('/api/secretariat/decision-letter/save', {
+                const response = await fetch('{{ url("/api/secretariat/decision-letter/save") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

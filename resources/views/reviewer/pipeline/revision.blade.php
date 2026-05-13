@@ -640,7 +640,7 @@ document.addEventListener('alpine:init', () => {
 
             if (this.activeTab === 'validate') {
                 try {
-                    const draftRes = await fetch(`/reviewer/assessment/${protocol.id}/v${revNum}/draft`);
+                    const draftRes = await fetch(`{{ url('/reviewer/assessment') }}/${protocol.id}/v${revNum}/draft`);
                     if (draftRes.ok) {
                         const draftData = await draftRes.json();
 
@@ -674,7 +674,7 @@ document.addEventListener('alpine:init', () => {
             this.loadedDocs = { activeBasic: [], activeSupp: [], legacy: [] };
 
             try {
-                const docResponse = await fetch(`/documents/api/revision/${protocol.id}/${revNum}`);
+                const docResponse = await fetch(`{{ url('/documents/api/revision') }}/${protocol.id}/${revNum}`);
                 if (docResponse.ok) {
                     const data = await docResponse.json();
                     let tempDocs = { activeBasic: [], activeSupp: [], legacy: [] };
@@ -752,7 +752,7 @@ document.addEventListener('alpine:init', () => {
             };
 
             try {
-                const response = await fetch(`/reviewer/assessment/${protocolId}/v${revNum}/draft`, {
+                const response = await fetch(`{{ url('/reviewer/assessment') }}/${protocolId}/v${revNum}/draft`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -851,7 +851,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             try {
-                const response = await fetch('/reviewer/validate-revisions', {
+                const response = await fetch("{{ url('/reviewer/validate-revisions') }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

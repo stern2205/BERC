@@ -1022,7 +1022,7 @@
     // ══════════════════════════════════════════════════════════════
     async function fetchMethods() {
         try {
-            const response = await fetch('/admin/payment-methods');
+            const response = await fetch('{{ url("/admin/payment-methods") }}');
 
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -1279,7 +1279,7 @@
         fd.append('is_active', enabled);
 
         try {
-            let res = await fetch('/admin/payment-methods/' + id, {
+            let res = await fetch('{{ url("/admin/payment-methods") }}/' + id, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': getCsrfToken() },
                 body: fd
@@ -1344,7 +1344,7 @@
         if (fileInp.files.length > 0) fd.append('logo', fileInp.files[0]);
 
         try {
-            let res = await fetch('/admin/payment-methods', {
+            let res = await fetch('{{ url("/admin/payment-methods") }}', {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': getCsrfToken() },
                 body: fd
@@ -1439,7 +1439,7 @@
         }
 
         try {
-            let res = await fetch('/admin/payment-methods/' + pendingSaveId, {
+            let res = await fetch('{{ url("/admin/payment-methods") }}/' + pendingSaveId, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': getCsrfToken() },
                 body: fd
@@ -1472,7 +1472,7 @@
         btn.disabled = true; btn.innerHTML = 'Deleting...';
 
         try {
-            let res = await fetch('/admin/payment-methods/' + pendingDeleteId, {
+            let res = await fetch('{{ url("/admin/payment-methods") }}/' + pendingDeleteId, {
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': getCsrfToken() }
             });

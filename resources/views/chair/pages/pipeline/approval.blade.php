@@ -1033,7 +1033,7 @@
                 };
 
                 try {
-                    const response = await fetch(`/documents/api/${protocolId}`);
+                    const response = await fetch(`{{ url('/documents/api') }}/${protocolId}`);
                     if (response.ok) {
                         const data = await response.json();
                         let tempDocs = { activeBasic: [], activeSupp: [], legacy: [] };
@@ -1129,7 +1129,7 @@
                 this.isSavingDecision = true;
 
                 try {
-                    const response = await fetch('/chair/decision-letter/save', {
+                    const response = await fetch("{{ url('/chair/decision-letter/save') }}", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1195,7 +1195,7 @@
                 }
 
                 try {
-                    const response = await fetch('/chair/protocol/finalize', {
+                    const response = await fetch("{{ url('/chair/protocol/finalize') }}", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1279,7 +1279,7 @@
             },
             async executeAssignConsultant() {
                 try {
-                    const response = await fetch('{{ route('chair.consultant.assign') }}', {
+                    const response = await fetch("{{ route('chair.consultant.assign') }}", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

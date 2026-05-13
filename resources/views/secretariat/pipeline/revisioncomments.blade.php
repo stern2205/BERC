@@ -557,7 +557,7 @@ document.addEventListener('alpine:init', () => {
             const revNum = protocol.version.replace('V', '');
 
             try {
-                const draftRes = await fetch(`/api/secretariat/resubmission/${protocol.id}/v${revNum}/draft`);
+                const draftRes = await fetch(`{{ url('/api/secretariat/resubmission') }}/${protocol.id}/v${revNum}/draft`);
                 if (draftRes.ok) {
                     const draftData = await draftRes.json();
 
@@ -590,7 +590,7 @@ document.addEventListener('alpine:init', () => {
             this.loadedDocs = { activeBasic: [], activeSupp: [], legacy: [] };
 
             try {
-                const docResponse = await fetch(`/documents/api/revision/${protocol.id}/${revNum}`);
+                const docResponse = await fetch(`{{ url('/documents/api/revision') }}/${protocol.id}/${revNum}`);
                 if (docResponse.ok) {
                     const data = await docResponse.json();
                     let tempDocs = { activeBasic: [], activeSupp: [], legacy: [] };
@@ -688,7 +688,7 @@ document.addEventListener('alpine:init', () => {
             };
 
             try {
-                const response = await fetch(`/api/secretariat/resubmission/${protocolId}/v${revNum}/draft`, {
+                const response = await fetch(`{{ url('/api/secretariat/resubmission') }}/${protocolId}/v${revNum}/draft`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -802,7 +802,7 @@ document.addEventListener('alpine:init', () => {
             };
 
             try {
-                const response = await fetch('/api/secretariat/resubmission/synthesis/save', {
+                const response = await fetch('{{ url("/api/secretariat/resubmission/synthesis/save") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

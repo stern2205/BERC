@@ -946,7 +946,7 @@
     // ==========================================
     async function openModal(protocolCode) {
         try {
-            const response = await fetch(`/secstaff/applications/${protocolCode}`);
+            const response = await fetch(`{{ url('/secstaff/applications') }}/${protocolCode}`);
             if (!response.ok) throw new Error('Fetch failed');
             const data = await response.json();
 
@@ -1294,7 +1294,7 @@
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const response = await fetch(`/research/status/${protocolCode}`, {
+            const response = await fetch(`{{ url('/research/status') }}/${protocolCode}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1352,7 +1352,7 @@
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const response = await fetch(`/research/status/${protocolCode}`, {
+            const response = await fetch(`{{ url('/research/status') }}/${protocolCode}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

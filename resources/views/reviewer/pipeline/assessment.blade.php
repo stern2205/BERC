@@ -547,7 +547,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             try {
-                const draftRes = await fetch(`/reviewer/assessment/${protocol.protocol_code}/draft`);
+                const draftRes = await fetch(`{{ url('/reviewer/assessment') }}/${protocol.protocol_code}/draft`);
                 if (draftRes.ok) {
                     const draftData = await draftRes.json();
                     if (draftData && draftData.assessment_rows) {
@@ -590,7 +590,7 @@ document.addEventListener('alpine:init', () => {
             this.loadedDocs = { activeBasic: [], activeSupp: [], legacy: [] };
 
             try {
-                const response = await fetch(`/documents/api/${protocol.protocol_code}`);
+                const response = await fetch(`{{ url('/documents/api') }}/${protocol.protocol_code}`);
                 if (response.ok) {
                     const data = await response.json();
                     let tempDocs = { activeBasic: [], activeSupp: [], legacy: [] };
@@ -689,7 +689,7 @@ document.addEventListener('alpine:init', () => {
             };
 
             try {
-                const response = await fetch(`/reviewer/assessment/${protocolId}/draft`, {
+                const response = await fetch(`{{ url('/reviewer/assessment') }}/${protocolId}/draft`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -763,7 +763,7 @@ document.addEventListener('alpine:init', () => {
             };
 
             try {
-                const response = await fetch(`/reviewer/assessment/${protocolId}/validate`, {
+                const response = await fetch(`{{ url('/reviewer/assessment') }}/${protocolId}/validate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

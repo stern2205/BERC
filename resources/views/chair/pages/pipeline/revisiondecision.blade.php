@@ -756,7 +756,7 @@ document.addEventListener('alpine:init', () => {
             this.loadedDocs = { activeBasic: [], activeSupp: [], legacy: [] };
 
             try {
-                const response = await fetch(`/documents/api/revision/${protocolCode}/${revNum}`);
+                const response = await fetch(`{{ url('/documents/api/revision') }}/${protocolCode}/${revNum}`);
 
                 if (response.ok) {
                     const data = await response.json();
@@ -873,7 +873,7 @@ document.addEventListener('alpine:init', () => {
             };
 
             try {
-                const response = await fetch('/api/chair/resubmission/decision/save', {
+                const response = await fetch("{{ url('/api/chair/resubmission/decision/save') }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
