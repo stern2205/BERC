@@ -956,7 +956,7 @@
         }
 
         function runSecretariatCalendarTutorial(manual = false) {
-            const userId = @json(auth()->id());
+            const userId = @json($user->id);
             const storageKey = 'berc_tutorial_step_' + userId;
 
             if (manual) {
@@ -1051,8 +1051,8 @@
 
         // AUTO FIRST LOGIN FLOW
         loadDriverThenRun(() => {
-            const isFirstLogin = @json(auth()->user()->is_first_login);
-            const userId = @json(auth()->id());
+            const isFirstLogin = @json($user->is_first_login);
+            const userId = @json($user->id);
             const storageKey = 'berc_tutorial_step_' + userId;
             const tourState = localStorage.getItem(storageKey);
 

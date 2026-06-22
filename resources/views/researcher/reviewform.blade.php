@@ -73,6 +73,79 @@
             display: none !important;
             }
         }
+
+        /* Custom Alert Modal */
+        #alert-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .alert-modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 2px solid #f3f4f6;
+        }
+
+        .alert-icon-wrapper {
+            width: 60px;
+            height: 60px;
+            background: #fee2e2;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #alert-title {
+            margin: 0 0 10px 0;
+            color: #111827;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        #alert-message {
+            margin: 0 0 24px 0;
+            color: #4b5563;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .alert-btn {
+            padding: 10px 24px;
+            background: #1e3a8a;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .alert-btn:hover {
+            background: #172554;
+        }
     </style>
 
   <body>
@@ -295,11 +368,12 @@
 
         <!-- Section 3: Brief Description -->
         <div class="form-section hidden" id="section-3">
-          <h2 class="section-title">Brief Description of the Study</h2>
-          <div class="form-group" style="grid-template-columns: 1fr;">
-            <label class="form-label" style="margin-bottom: 10px;">Brief Description of the Study</label>
-            <textarea class="form-input" name="brief_description" placeholder="Provide a brief description of the study" rows="15" required style="width: 100%; resize: vertical;"></textarea>
-          </div>
+            <h2 class="section-title">Brief Description of the Study</h2>
+            <div class="form-group" style="grid-template-columns: 1fr;">
+                <label class="form-label" style="margin-bottom: 10px;">Brief Description of the Study</label>
+                <textarea class="form-input" id="brief_description_text" name="brief_description" placeholder="Provide a brief description of the study (Maximum 250 words)" rows="15" required style="width: 100%; resize: vertical;"></textarea>
+                <div id="word-count-display" style="font-size: 12px; color: #6b7280; margin-top: 5px; text-align: right; font-weight: 600;">0 / 250 words</div>
+            </div>
         </div>
 
         <div class="form-section hidden" id="section-4">
@@ -317,7 +391,7 @@
                     <div class="upload-bin" id="letter-container" style="display: none; margin-left: 24px; margin-top: 8px;">
                         <div class="doc-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 8px 12px;">
                             <div style="flex: 1; display: flex; align-items: center;">
-                                <input type="file" required name="doc_letter_request[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                <input type="file" required name="doc_letter_request[]" accept=".pdf" class="custom-file-input" />
                             </div>
                         </div>
                         <button type="button" onclick="addDocumentRow('letter-container', 'doc_letter_request[]')" style="background: #eff6ff; color: #1e3a8a; border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;">
@@ -334,7 +408,7 @@
                     <div class="upload-bin" id="endorsement-container" style="display: none; margin-left: 24px; margin-top: 8px;">
                         <div class="doc-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 8px 12px;">
                             <div style="flex: 1; display: flex; align-items: center;">
-                                <input type="file" required name="doc_endorsement_letter[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                <input type="file" required name="doc_endorsement_letter[]" accept=".pdf" class="custom-file-input" />
                             </div>
                         </div>
                         <button type="button" onclick="addDocumentRow('endorsement-container', 'doc_endorsement_letter[]')" style="background: #eff6ff; color: #1e3a8a; border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;">
@@ -351,7 +425,7 @@
                     <div class="upload-bin" id="proposal-container" style="display: none; margin-left: 24px; margin-top: 8px;">
                         <div class="doc-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 8px 12px;">
                             <div style="flex: 1; display: flex; align-items: center;">
-                                <input type="file" required name="doc_full_proposal[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                <input type="file" required name="doc_full_proposal[]" accept=".pdf" class="custom-file-input" />
                             </div>
                         </div>
                         <button type="button" onclick="addDocumentRow('proposal-container', 'doc_full_proposal[]')" style="background: #eff6ff; color: #1e3a8a; border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;">
@@ -368,7 +442,7 @@
                     <div class="upload-bin" id="technical-container" style="display: none; margin-left: 24px; margin-top: 8px;">
                         <div class="doc-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 8px 12px;">
                             <div style="flex: 1; display: flex; align-items: center;">
-                                <input type="file" required name="doc_technical_review_approval[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                <input type="file" required name="doc_technical_review_approval[]" accept=".pdf" class="custom-file-input" />
                             </div>
                         </div>
                         <button type="button" onclick="addDocumentRow('technical-container', 'doc_technical_review_approval[]')" style="background: #eff6ff; color: #1e3a8a; border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;">
@@ -386,7 +460,7 @@
                         <div class="doc-row" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 10px 12px;">
                             <input type="text" name="doc_curriculum_vitae_desc[]" placeholder="Name of Researcher (e.g., Dr. Juan Dela Cruz)" style="width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#d1d5db'" />
                             <div style="flex: 1; display: flex; align-items: center;">
-                                <input type="file" required name="doc_curriculum_vitae[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                <input type="file" required name="doc_curriculum_vitae[]" accept=".pdf" class="custom-file-input" />
                             </div>
                         </div>
                         <button type="button" onclick="addDocumentRow('cv-container', 'doc_curriculum_vitae[]', 'doc_curriculum_vitae_desc[]', 'Name of Researcher (e.g., Dr. Juan Dela Cruz)')" style="background: #eff6ff; color: #1e3a8a; border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;">
@@ -431,7 +505,7 @@
                                 <div class="doc-row" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 10px 12px;">
                                     <input type="text" name="doc_informed_consent_lang[]" placeholder="Specify Document Nature" style="width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#d1d5db'" />
                                     <div style="flex: 1; display: flex; align-items: center;">
-                                        <input type="file" name="doc_informed_consent[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                        <input type="file" name="doc_informed_consent[]" accept=".pdf" class="custom-file-input" />
                                     </div>
                                 </div>
 
@@ -454,7 +528,7 @@
                         <div class="doc-row" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 10px 12px;">
                             <input type="text" name="doc_questionnaire_desc[]" placeholder="Name of Questionnaire (e.g., Demographics Survey)" style="width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#d1d5db'" />
                             <div style="flex: 1; display: flex; align-items: center;">
-                                <input type="file" name="doc_questionnaire[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                <input type="file" name="doc_questionnaire[]" accept=".pdf" class="custom-file-input" />
                             </div>
                         </div>
                         <button type="button" onclick="addDocumentRow('questionnaire-container', 'doc_questionnaire[]', 'doc_questionnaire_desc[]', 'Name of Questionnaire (e.g., Demographics Survey)')" style="background: #eff6ff; color: #1e3a8a; border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;">
@@ -472,7 +546,7 @@
                         <div class="doc-row" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 10px 12px;">
                             <input type="text" name="doc_data_collection_desc[]" placeholder="Name of Data Collection Form (e.g., Interview Guide)" style="width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#d1d5db'" />
                             <div style="flex: 1; display: flex; align-items: center;">
-                                <input type="file" name="doc_data_collection[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                <input type="file" name="doc_data_collection[]" accept=".pdf" class="custom-file-input" />
                             </div>
                         </div>
                         <button type="button" onclick="addDocumentRow('data-collection-container', 'doc_data_collection[]', 'doc_data_collection_desc[]', 'Name of Data Collection Form (e.g., Interview Guide)')" style="background: #eff6ff; color: #1e3a8a; border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;">
@@ -490,7 +564,7 @@
                         <div class="doc-row" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 10px 12px;">
                             <input type="text" name="doc_product_brochure_desc[]" placeholder="Name of Product Brochure" style="width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#d1d5db'" />
                             <div style="flex: 1; display: flex; align-items: center;">
-                                <input type="file" name="doc_product_brochure[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                <input type="file" name="doc_product_brochure[]" accept=".pdf" class="custom-file-input" />
                             </div>
                         </div>
                         <button type="button" onclick="addDocumentRow('product-brochure-container', 'doc_product_brochure[]', 'doc_product_brochure_desc[]', 'Name of Product Brochure')" style="background: #eff6ff; color: #1e3a8a; border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;">
@@ -508,7 +582,7 @@
                         <div class="doc-row" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 10px 12px;">
                             <input type="text" name="doc_philippine_fda_desc[]" placeholder="Name of Authorization/License (e.g., FDA Clearance)" style="width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#d1d5db'" />
                             <div style="flex: 1; display: flex; align-items: center;">
-                                <input type="file" name="doc_philippine_fda[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                <input type="file" name="doc_philippine_fda[]" accept=".pdf" class="custom-file-input" />
                             </div>
                         </div>
                         <button type="button" onclick="addDocumentRow('philippine-fda-container', 'doc_philippine_fda[]', 'doc_philippine_fda_desc[]', 'Name of Authorization/License (e.g., FDA Clearance)')" style="background: #eff6ff; color: #1e3a8a; border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;">
@@ -526,7 +600,7 @@
                         <div class="doc-row" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 10px 12px;">
                             <input type="text" name="doc_special_populations_desc[]" placeholder="Name of Permit (e.g., NCIP Clearance)" style="width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#d1d5db'" />
                             <div style="flex: 1; display: flex; align-items: center;">
-                                <input type="file" name="doc_special_populations[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                <input type="file" name="doc_special_populations[]" accept=".pdf" class="custom-file-input" />
                             </div>
                         </div>
                         <button type="button" onclick="addDocumentRow('special-pop-container', 'doc_special_populations[]', 'doc_special_populations_desc[]', 'Name of Permit (e.g., NCIP Clearance)')" style="background: #eff6ff; color: #1e3a8a; border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;">
@@ -544,7 +618,7 @@
                         <div class="doc-row" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; background: #f8faff; border: 1px dashed #bfdbfe; border-radius: 8px; padding: 10px 12px;">
                             <input type="text" name="doc_others_desc[]" placeholder="Document Name (e.g., MOU with LGU)" style="width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1e3a8a'" onblur="this.style.borderColor='#d1d5db'" />
                             <div style="flex: 1; display: flex; align-items: center;">
-                                <input type="file" name="doc_others[]" accept=".pdf,.doc,.docx" class="custom-file-input" />
+                                <input type="file" name="doc_others[]" accept=".pdf" class="custom-file-input" />
                             </div>
                         </div>
                         <button type="button" onclick="addDocumentRow('others-container', 'doc_others[]', 'doc_others_desc[]', 'Document Name (e.g., MOU with LGU)')" style="background: #eff6ff; color: #1e3a8a; border: none; border-radius: 6px; padding: 6px 12px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s;">
@@ -559,10 +633,10 @@
                         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" stroke-width="1.5" style="flex-shrink: 0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
                         <div style="flex: 1;">
                             <p style="font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 11px; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px;">Upload Manuscript</p>
-                            <p style="font-size: 11px; color: #6b7280;">PDF, DOC, DOCX — Max 20MB</p>
+                            <p style="font-size: 11px; color: #6b7280;">PDF only — Max 20MB</p>
                         </div>
                         <label style="cursor: pointer; flex-shrink: 0;">
-                            <input type="file" id="manuscript-upload" name="doc_manuscript[]" accept=".pdf,.doc,.docx" style="display: none;" required onchange="handleManuscriptUpload(this)" />
+                            <input type="file" id="manuscript-upload" name="doc_manuscript[]" accept=".pdf" style="display: none;" required onchange="handleManuscriptUpload(this)" />
                             <span style="background: #1e3a8a; color: white; padding: 8px 16px; border-radius: 7px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; cursor: pointer; white-space: nowrap;">Choose File</span>
                         </label>
                     </div>
@@ -1352,6 +1426,18 @@
           </div>
       </form>
 
+      <!-- CUSTOM ALERT MODAL -->
+        <div id="alert-modal">
+            <div class="alert-modal-content">
+                <div class="alert-icon-wrapper">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <h3 id="alert-title">Notice</h3>
+                <p id="alert-message"></p>
+                <button type="button" class="alert-btn" onclick="closeAlert()">OK, I understand</button>
+            </div>
+        </div>
+
       <div id="success-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
 
         <div style="background: white; border-radius: 12px; padding: 40px; max-width: 480px; width: 90%; max-height: 90vh; overflow-y: auto; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); border: 2px solid #f3f4f6;">
@@ -1508,13 +1594,33 @@
             if (currentStep === 1) nextBtn.disabled = !this.checked;
         });
 
+        // --- NEW CUSTOM ALERT FUNCTIONS ---
+        function showAlert(message, title = "Notice") {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            document.getElementById('alert-modal').style.display = 'flex';
+        }
+
+        function closeAlert() {
+            document.getElementById('alert-modal').style.display = 'none';
+        }
+
+
         nextBtn?.addEventListener("click", function(event) {
             if (currentStep < totalSteps) {
                 const currentSection = document.getElementById(`section-${currentStep}`);
 
+                if (currentStep === 3) {
+                    const words = getWordCount(briefDescInput.value);
+                    if (words > maxWords) {
+                        showAlert(`Your brief description exceeds the 250-word limit (Current: ${words} words). Please shorten it before proceeding.`, "Word Limit Exceeded");
+                        return; // Stops the form from proceeding
+                    }
+                }
+
                 if (currentStep === 5 || currentStep === 6) {
                     if (!isProtocolReviewComplete()) {
-                        alert("Please complete all Protocol Review & Assessment fields before proceeding.");
+                        showAlert("Please complete all Protocol Review & Assessment fields before proceeding.", "Incomplete Assessment");
                         return;
                     }
                 }
@@ -1533,7 +1639,7 @@
 
                     // 2. Error: Too many files
                     if (totalFiles > 16) {
-                        alert(`Limit Exceeded: You have ${totalFiles} documents selected. Please remove ${totalFiles - 16} to stay within the 16-document limit.`);
+                        showAlert(`Limit Exceeded: You have ${totalFiles} documents selected. Please remove ${totalFiles - 16} to stay within the 16-document limit.`, "Too Many Files");
                         return; // Stop and stay on Step 4
                     }
 
@@ -1568,7 +1674,7 @@
 
                     // If there are any missing documents, alert the user and stop progression
                     if (missingDocs.length > 0) {
-                        alert("Please upload the following required documents before proceeding:\n\n- " + missingDocs.join("\n- "));
+                        showAlert("Please upload the following required documents before proceeding:\n\n- " + missingDocs.join("\n- "), "Missing Documents");
                         return; // Stop and stay on Step 4
                     }
                 }
@@ -1587,7 +1693,7 @@
                 });
 
                 if (!isValid) {
-                    alert("Please fill in all required fields.");
+                    showAlert("Please fill in all required fields.", "Incomplete Fields");
                     return;
                 }
 
@@ -1788,7 +1894,7 @@
         function handleReceiptUpload(input) {
             const file = input.files[0];
             if (!file) return;
-            if (file.size > 10 * 1024 * 1024) { alert('File too large. Max 10MB.'); return; }
+            if (file.size > 10 * 1024 * 1024) { showAlert('File too large. Max 10MB.', 'File Size Limit'); return; }
             receiptFile = file;
             document.getElementById('receipt-filename').textContent = file.name;
             document.getElementById('receipt-filesize').textContent = formatFileSize(file.size);
@@ -1883,7 +1989,7 @@
         function handleManuscriptUpload(input) {
             const file = input.files[0];
             if (!file) return;
-            if (file.size > 20 * 1024 * 1024) { alert('File too large. Max 20MB.'); input.value = ''; return; }
+            if (file.size > 20 * 1024 * 1024) { showAlert('File too large. Max 20MB.', 'File Size Limit'); input.value = ''; return; }
             manuscriptFile = file;
             document.getElementById('manuscript-filename').textContent = file.name;
             document.getElementById('manuscript-filesize').textContent = formatFileSize(file.size);
@@ -2038,7 +2144,7 @@
                 e.preventDefault();
 
                 if (!finalConfirmCheckbox || !finalConfirmCheckbox.checked) {
-                    return alert("Please confirm that all information is correct before submitting.");
+                    return showAlert("Please confirm that all information is correct before submitting.", "Confirmation Required");
                 }
 
                 const originalText = this.innerText;
@@ -2087,14 +2193,14 @@
                         if (responseData.errors) {
                             errorMsg = "Validation failed:\n" + Object.values(responseData.errors).flat().join('\n');
                         }
-                        alert(errorMsg);
+                        showAlert(errorMsg, "Submission Error");
 
                         this.innerText = originalText;
                         this.disabled = false;
                     }
                 } catch (error) {
                     console.error("Critical Failure:", error);
-                    alert("Connection error or Server timeout.");
+                    showAlert("Connection error or Server timeout.", "Network Error");
                     this.innerText = originalText;
                     this.disabled = false;
                 }
@@ -2181,7 +2287,7 @@
             return true; // Allow proceeding if 16 or fewer
         }
 
-        function goToDashboard() { window.location.href = "/dashboard"; }
+        function goToDashboard() { window.location.href = "{{ url('/dashboard') }}"; }
 
         const originalShowSection = showSection;
         showSection = function(step) { if (step === 8) populateSummary(); originalShowSection(step); };
@@ -2238,6 +2344,30 @@
                 tbody.appendChild(row);
             });
         }
+
+        // --- WORD COUNT LOGIC FOR BRIEF DESCRIPTION ---
+        const briefDescInput = document.getElementById('brief_description_text');
+        const wordCountDisplay = document.getElementById('word-count-display');
+        const maxWords = 250;
+
+        function getWordCount(text) {
+            // Splits by spaces/newlines and filters out empty strings to get accurate count
+            return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+        }
+
+        briefDescInput?.addEventListener('input', function() {
+            const words = getWordCount(this.value);
+            wordCountDisplay.textContent = `${words} / ${maxWords} words`;
+
+            // Turn text and border red if they exceed the limit
+            if (words > maxWords) {
+                wordCountDisplay.style.color = '#dc2626';
+                this.style.borderColor = '#dc2626';
+            } else {
+                wordCountDisplay.style.color = '#6b7280';
+                this.style.borderColor = '#e5e7eb'; // Default border color
+            }
+        });
     </script>
   </body>
 </html>

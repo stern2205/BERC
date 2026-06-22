@@ -2269,8 +2269,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function runProtocolEvaluationTutorial(manual = false, retries = 0) {
-        const userId = @json(auth()->id());
-        const isFirstLogin = @json(auth()->user()->is_first_login);
+        const userId = @json($user->id);
+        const isFirstLogin = @json($user->is_first_login);
         const storageKey = 'berc_tutorial_step_' + userId;
         const tourState = localStorage.getItem(storageKey);
 

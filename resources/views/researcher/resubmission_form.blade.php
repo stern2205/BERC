@@ -156,7 +156,7 @@
                         <label class="block text-[10px] font-black uppercase text-blue-900 mb-2 tracking-widest">
                             Revised Manuscript <span class="text-gray-400 font-medium normal-case tracking-normal">(PDF, DOC, DOCX - Optional)</span>
                         </label>
-                        <input type="file" name="revised_manuscript" accept=".pdf,.doc,.docx"
+                        <input type="file" name="revised_manuscript" accept=".pdf"
                             class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition border border-gray-200 rounded-lg p-2 bg-gray-50 cursor-pointer">
                     </div>
 
@@ -183,7 +183,7 @@
                                         class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:border-blue-900 outline-none font-medium">
                                 </div>
                                 <div class="flex-1 w-full">
-                                    <input type="file" name="icf_files[]" accept=".pdf,.doc,.docx"
+                                    <input type="file" name="icf_files[]" accept=".pdf"
                                         class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:font-bold file:bg-white file:border-gray-200 file:shadow-sm file:text-gray-700 border border-gray-300 rounded bg-white p-1.5 cursor-pointer">
                                 </div>
                                 <div class="w-full md:w-8 flex justify-end md:justify-center"></div>
@@ -272,7 +272,7 @@
                     class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:border-blue-900 outline-none font-medium">
             </div>
             <div class="flex-1 w-full">
-                <input type="file" name="icf_files[]" accept=".pdf,.doc,.docx"
+                <input type="file" name="icf_files[]" accept=".pdf"
                     class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:font-bold file:bg-white file:border-gray-200 file:shadow-sm file:text-gray-700 border border-gray-300 rounded bg-white p-1.5 cursor-pointer">
             </div>
             <div class="w-full md:w-8 flex justify-end md:justify-center">

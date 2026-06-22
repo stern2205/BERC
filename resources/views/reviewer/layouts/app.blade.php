@@ -235,14 +235,6 @@
 
     <main class="flex-1 overflow-y-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-            @php
-                $layoutUser = auth()->user();
-                $layoutName = $layoutUser?->name ?? 'Reviewer User';
-                $layoutRole = $layoutUser?->role ?? 'Reviewer';
-                $layoutAccountId = $layoutUser?->employee_id ?? (string) ($layoutUser?->id ?? '0000');
-                $layoutEmail = $layoutUser?->email ?? 'reviewer@example.com';
-                $layoutProfileImage = $layoutUser?->profile_image ?? 'profiles/default.png';
-            @endphp
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative mb-4">
                 <div class="absolute inset-0 z-0">
                     <img src="{{ asset('images/background.jpg') }}" alt="Campus Background" class="w-full h-full object-cover">
@@ -251,21 +243,21 @@
                 <div class="relative z-10 p-4 sm:p-8 flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6">
                     <div class="shrink-0">
                         <div class="bg-white/20 backdrop-blur-sm p-1 rounded-2xl border border-white/20 shadow-lg">
-                            <img src="{{ asset($layoutProfileImage) }}" alt="Profile Photo"
+                            <img src="{{ asset($user->profile_image ?? 'profiles/default.png') }}" alt="Profile Photo"
                                 class="w-16 h-16 sm:w-24 sm:h-24 object-cover bg-gray-300 rounded-xl">
                         </div>
                     </div>
                     <div class="flex-1 text-white text-center sm:text-left">
-                        <p class="text-[10px] font-bold text-gray-200 uppercase tracking-widest">{{ $layoutRole }}</p>
-                        <h2 class="text-xl sm:text-2xl font-black uppercase tracking-tight">{{ $layoutName }}</h2>
+                        <p class="text-[10px] font-bold text-gray-200 uppercase tracking-widest">{{ $user->role }}</p>
+                        <h2 class="text-xl sm:text-2xl font-black uppercase tracking-tight">{{ $user->name }}</h2>
                         <div class="flex flex-col sm:flex-row sm:space-x-12 gap-2 sm:gap-0 mt-2 sm:mt-3 items-center sm:items-start">
                             <div>
                                 <p class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Account ID</p>
-                                <p class="text-xs font-bold tracking-wide">{{ $layoutAccountId }}</p>
+                                <p class="text-xs font-bold tracking-wide">{{ $user->id }}</p>
                             </div>
                             <div>
                                 <p class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Email Address</p>
-                                <p class="text-xs font-bold tracking-wide">{{ $layoutEmail }}</p>
+                                <p class="text-xs font-bold tracking-wide">{{ $user->email }}</p>
                             </div>
                         </div>
                     </div>

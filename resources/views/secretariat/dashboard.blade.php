@@ -465,31 +465,6 @@
             </div>
         </div>
     </div>
-
-    <h2 class="text-base sm:text-xl font-bold text-gray-800 mb-3 mt-6 uppercase tracking-tight">About BERC</h2>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
-        <div class="about-card group">
-            <div class="text-2xl mb-2 group-hover:scale-110 transition-transform inline-block">📘</div>
-            <h3 class="font-bold text-gray-800 text-xs sm:text-sm">Staff Handbook</h3>
-            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase font-bold mt-1 tracking-wider group-hover:text-bsu-dark">View Guide →</p>
-        </div>
-        <div class="about-card group">
-            <div class="text-2xl mb-2 group-hover:scale-110 transition-transform inline-block">📅</div>
-            <h3 class="font-bold text-gray-800 text-xs sm:text-sm">Review Schedule</h3>
-            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase font-bold mt-1 tracking-wider group-hover:text-bsu-dark">Access Tool →</p>
-        </div>
-        <div class="about-card group">
-            <div class="text-2xl mb-2 group-hover:scale-110 transition-transform inline-block">🎓</div>
-            <h3 class="font-bold text-gray-800 text-xs sm:text-sm">Ethics Guidelines</h3>
-            <span class="text-[8px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-black uppercase mt-1 inline-block">URGENT</span>
-        </div>
-        <div class="about-card group">
-            <div class="text-2xl mb-2 group-hover:scale-110 transition-transform inline-block">📝</div>
-            <h3 class="font-bold text-gray-800 text-xs sm:text-sm">Special Cases</h3>
-            <span class="text-[8px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-black uppercase mt-1 inline-block">NEW</span>
-        </div>
-    </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -682,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function runSecretariatDashboardTutorial(manual = false) {
-        const userId = @json(auth()->id());
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         if (manual) {
@@ -777,8 +752,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // AUTO FIRST LOGIN
     loadDriverThenRun(() => {
-        const isFirstLogin = @json(auth()->user()->is_first_login);
-        const userId = @json(auth()->id());
+        const isFirstLogin = @json($user->is_first_login);
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
         const tourState = localStorage.getItem(storageKey);
 

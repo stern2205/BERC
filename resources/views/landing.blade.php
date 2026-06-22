@@ -107,11 +107,10 @@
             </div>
 
             <!-- Desktop links -->
-            <div
-                class="hidden md:flex items-center space-x-8 text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+            <div class="hidden md:flex items-center space-x-8 text-[11px] font-bold text-gray-500 uppercase tracking-widest">
                 <a href="#" class="hover:text-blue-900 transition-colors">Home</a>
-                <a href="#" class="hover:text-blue-900 transition-colors">Facts</a>
-                <a href="#" class="hover:text-blue-900 transition-colors">About</a>
+                <a href="#berc-facts" class="hover:text-blue-900 transition-colors">Facts</a>
+                <a href="#what-is-berc" class="hover:text-blue-900 transition-colors">About</a>
                 <a href="{{ route('signup.form') }}"
                     class="bg-[#1f377a] text-white px-5 py-2 rounded-sm hover:bg-blue-800 transition shadow-sm">
                     Sign Up
@@ -133,8 +132,8 @@
             <div
                 class="flex flex-col px-5 py-4 space-y-3 text-[12px] font-bold text-gray-600 uppercase tracking-widest">
                 <a href="{{ route('landing') }}" class="hover:text-blue-900 transition-colors py-1">Home</a>
-                <a href="#" class="hover:text-blue-900 transition-colors py-1">Facts</a>
-                <a href="#" class="hover:text-blue-900 transition-colors py-1">About</a>
+                <a href="#berc-facts" class="hover:text-blue-900 transition-colors py-1">Facts</a>
+                <a href="#what-is-berc" class="hover:text-blue-900 transition-colors py-1">About</a>
                 <a href="{{ route('signup.form') }}"
                     class="mt-1 bg-[#1f377a] text-white text-center px-5 py-2.5 rounded hover:bg-blue-800 transition shadow-sm">
                     Sign Up
@@ -193,7 +192,7 @@
     </header>
 
     <!-- ═══════════ WHAT IS BERC ═══════════ -->
-    <section class="py-16 sm:py-20 lg:py-24 relative overflow-hidden">
+    <section id="what-is-berc" class="py-16 sm:py-20 lg:py-24 relative overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-b from-white via-blue-50 to-white"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
@@ -246,7 +245,7 @@
     </section>
 
     <!-- ═══════════ BERC FACTS ═══════════ -->
-    <section class="py-16 sm:py-20 bg-gray-50 border-y border-gray-100">
+    <section id="berc-facts" class="py-16 sm:py-20 bg-gray-50 border-y border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 class="text-3xl sm:text-4xl font-bold text-blue-900 mb-3 sm:mb-4">BERC Facts</h2>
             <p class="text-gray-500 mb-10 sm:mb-16 italic text-sm sm:text-base">What distinguishes BERC efficiency

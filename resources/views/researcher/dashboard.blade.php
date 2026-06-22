@@ -302,10 +302,10 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // 1. Check if it is their first login
-        const isFirstLogin = @json(auth()->user()->is_first_login);
+        const isFirstLogin = @json($user->is_first_login);
 
         // 2. Create a memory key unique to this specific user ID
-        const userId = @json(auth()->id());
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         // 3. If they are no longer on their first login, wipe memory and abort
@@ -387,7 +387,7 @@
 
 <script>
     function startManualTutorial() {
-        const userId = @json(auth()->id());
+        const userId = @json($user->id());
         const storageKey = 'berc_tutorial_step_' + userId;
 
         localStorage.setItem(storageKey, 'dashboard');

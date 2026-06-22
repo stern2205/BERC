@@ -62,6 +62,19 @@
     /* Right Panel Layout override for Viewer */
     .form-preview-panel { flex: 1 1 0; width: auto; overflow-y: auto; background: #f8fafc; position: relative; display: flex; flex-direction: column; }
     .form-preview-panel.viewer-active { padding: 0 !important; }
+
+    /* ── Confirm Modal Styles ── */
+    .modal-backdrop-confirm { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-box-confirm { background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.25); width: 100%; max-width: 420px; overflow: hidden; }
+    .modal-header-confirm { background-color: #1e3a8a; padding: 20px 24px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .modal-header-confirm h3 { font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; color: #fff; margin: 0; }
+    .modal-close-btn-confirm { width: 28px; height: 28px; border-radius: 7px; border: none; background: transparent; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, opacity .15s; opacity: 0.7; }
+    .modal-close-btn-confirm:hover { background: rgba(255, 255, 255, 0.15); opacity: 1; }
+    .modal-body-confirm { padding: 24px 24px; }
+    .modal-footer-confirm { padding: 16px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 8px; background: #f9fafb; }
+
+    .btn-cancel { padding: 8px 16px; border-radius: 8px; border: 1.5px solid #e5e7eb; background: #fff; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; cursor: pointer; transition: background .15s; font-family: 'Inter', sans-serif; }
+    .btn-cancel:hover { background: #f3f4f6; }
 </style>
 
 <div id="decision-root" x-data="decisionData(@js($initialData ?? ['drafting' => [], 'awaiting' => []]))" class="max-w-7xl mx-auto pb-6 animate-in fade-in duration-500">
@@ -456,10 +469,51 @@
             <div id="tour-decision-footer" class="px-6 py-4 bg-slate-50 border-t flex justify-end items-center shrink-0">
                 <div class="flex gap-3">
                     <button class="px-6 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 transition-colors uppercase border-none bg-transparent cursor-pointer" @click="closeModal()">Cancel</button>
-                    <button x-show="activeView === 'decision_letter' && activeTab === 'drafting'" class="bg-[#D32F2F] text-white px-8 py-2 rounded-xl text-xs font-black shadow-lg hover:shadow-xl hover:bg-red-700 transition-all uppercase tracking-widest border-none cursor-pointer disabled:opacity-50" @click="submitDecision" :disabled="isLoading">
+                    <button x-show="activeView === 'decision_letter' && activeTab === 'drafting'" class="bg-[#D32F2F] text-white px-8 py-2 rounded-xl text-xs font-black shadow-lg hover:shadow-xl hover:bg-red-700 transition-all uppercase tracking-widest border-none cursor-pointer disabled:opacity-50" @click="promptSubmit" :disabled="isLoading">
                         <span x-text="isLoading ? 'Sending...' : 'Save & Route to Chair'"></span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="showConfirmModal" x-cloak class="modal-backdrop-confirm">
+        <div class="modal-box-confirm animate-in zoom-in-95 duration-200" @click.away="showConfirmModal = false">
+            <div class="modal-header-confirm">
+                <h3>Confirm Route</h3>
+                <button type="button" class="modal-close-btn-confirm" @click="showConfirmModal = false">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body-confirm">
+                <p class="text-[12px] text-gray-600 mb-2">You are about to route the decision letter for:</p>
+                <p class="text-[13px] font-black text-bsu-dark uppercase mb-4 leading-snug" x-text="selectedProtocol?.title"></p>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Recommended Action</p>
+                    <p class="text-xs font-black uppercase"
+                        :class="{
+                            'text-green-700': decisionStatus === 'approved',
+                            'text-yellow-700': decisionStatus === 'minor_revision' || decisionStatus === 'major_revision',
+                            'text-red-700': decisionStatus === 'rejected'
+                        }"
+                        x-text="decisionStatus ? decisionStatus.replace('_', ' ') : ''"></p>
+                </div>
+                <p class="text-[11px] text-gray-500 mt-4">Are you sure you want to finalize this and route it to the Chair?</p>
+            </div>
+            <div class="modal-footer-confirm">
+                <button type="button"
+                        class="px-4 py-2 rounded-lg border border-gray-200 bg-white text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer"
+                        @click="showConfirmModal = false">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        class="px-5 py-2 rounded-lg bg-[#D32F2F] text-white text-[11px] font-extrabold uppercase tracking-wider shadow-md hover:bg-red-700 hover:shadow-lg transition-all flex items-center cursor-pointer border-none"
+                        @click="executeSubmit()">
+                    <svg style="width:14px;height:14px;margin-right:6px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Confirm
+                </button>
             </div>
         </div>
     </div>
@@ -502,6 +556,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         isLoading: false,
+        showConfirmModal: false,
 
         notification: {
             open: false,
@@ -690,6 +745,14 @@ document.addEventListener('alpine:init', () => {
             setTimeout(() => {
                 this.notification.open = false;
             }, 3000);
+        },
+
+        promptSubmit() {
+            if (!this.decisionStatus) {
+                this.showNotification('Error', 'Please select a Recommended Decision Status', 'error');
+                return;
+            }
+            this.showConfirmModal = true;
         },
 
         async openValidate(protocol) {
@@ -898,14 +961,8 @@ document.addEventListener('alpine:init', () => {
             return 'text-red-700 border-red-200 bg-red-50';
         },
 
-        async submitDecision() {
-            if (!this.decisionStatus) {
-                this.showNotification('Error', 'Please select a Recommended Decision Status', 'error');
-                return;
-            }
-
-            if (!confirm('Finalize this decision letter and route it to the Chair?')) return;
-
+        async executeSubmit() {
+            this.showConfirmModal = false; // Hide modal before processing
             this.isLoading = true;
 
             const payload = {
@@ -978,8 +1035,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function runDecisionTutorial(manual = false, retries = 0) {
-        const isFirstLogin = @json(auth()->check() ? auth()->user()->is_first_login : true);
-        const userId = @json(auth()->id() ?? 1);
+        const isFirstLogin = @json($user->is_first_login);
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         const urlParams = new URLSearchParams(window.location.search);

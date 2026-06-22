@@ -444,28 +444,40 @@
             width: 100%; max-width: 420px;
             transform: scale(.95) translateY(12px);
             transition: transform .25s;
-            overflow: hidden;
+            overflow: hidden; /* This perfectly trims the header to match the rounded corners */
         }
         .modal-backdrop.open .modal-box { transform: scale(1) translateY(0); }
+
+        /* --- UPDATED HEADER --- */
         .modal-header {
+            background-color: #1e3a8a; /* The blue background */
             padding: 20px 24px 16px;
-            border-bottom: 1px solid #e5e7eb;
             display: flex; align-items: center; justify-content: space-between;
         }
         .modal-header h3 {
             font-size: 14px; font-weight: 900;
             text-transform: uppercase; letter-spacing: .06em;
-            color: var(--bsu-dark);
+            color: #fff; /* Changed to white */
+            margin: 0;
         }
+
+        /* --- UPDATED CLOSE BUTTON --- */
         .modal-close-btn {
             width: 28px; height: 28px; border-radius: 7px;
-            border: 1.5px solid #e5e7eb; background: #f9fafb;
+            border: none; /* Removed the gray border */
+            background: transparent; /* Removed the gray background */
+            color: #fff; /* Makes the SVG stroke white */
             cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: background .15s;
+            transition: background .15s, opacity .15s;
+            opacity: 0.7;
         }
-        .modal-close-btn:hover { background: #fee2e2; border-color: #fca5a5; }
+        .modal-close-btn:hover {
+            background: rgba(255, 255, 255, 0.15); /* Soft white highlight on hover */
+            opacity: 1;
+        }
+
         .modal-body { padding: 20px 24px; }
-        .modal-footer { padding: 16px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 8px; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 8px; background: #f9fafb; }
 
         .btn-cancel {
             padding: 8px 16px; border-radius: 8px;
@@ -1155,9 +1167,14 @@
 
             return '<div class="method-card ' + (m.is_active ? 'enabled' : 'disabled') + '" id="mcard-' + m.id + '">' +
                 '<div class="method-card-top">' +
-                    (showLogo
-                        ? '<div class="method-icon" id="icon-' + m.id + '"><img src="' + escAttr(dispLogo) + '" alt="' + escAttr(m.name) + '"></div>'
-                        : '<div class="method-icon" id="icon-' + m.id + '" style="background:' + m.bg_color + '">' + escHtml(m.icon_label || '') + '</div>'
+                    (
+                        showLogo
+                            ? '<div class="method-icon" id="icon-' + m.id + '">' +
+                                '<img src="{{ asset('') }}/' + escAttr(dispLogo) + '" alt="' + escAttr(m.name) + '">' +
+                            '</div>'
+                            : '<div class="method-icon" id="icon-' + m.id + '" style="background:' + m.bg_color + '">' +
+                                escHtml(m.icon_label || '') +
+                            '</div>'
                     ) +
                     '<div class="method-info">' +
                         '<div class="method-name" style="color:' + m.bg_color + '">' + escHtml(m.name) + '</div>' +
@@ -1520,8 +1537,8 @@
     document.addEventListener('DOMContentLoaded', fetchMethods);
 
     document.addEventListener('DOMContentLoaded', () => {
-        const isFirstLogin = @json(auth()->user()->is_first_login);
-        const userId = @json(auth()->id());
+        const isFirstLogin = @json($user->is_first_login);
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         // If they are no longer on their first login, wipe memory and abort

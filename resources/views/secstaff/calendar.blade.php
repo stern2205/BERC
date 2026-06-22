@@ -652,8 +652,8 @@ $currentMonthNum = (int)date('n');
 
         document.addEventListener('DOMContentLoaded', () => {
             // 1. Check if it is their first login
-            const isFirstLogin = @json(auth()->user()->is_first_login);
-            const userId = @json(auth()->id());
+            const isFirstLogin = @json($user->is_first_login);
+            const userId = @json($user->id);
             const storageKey = 'berc_tutorial_step_' + userId;
 
             // If they are no longer on their first login, wipe memory and abort

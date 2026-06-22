@@ -1331,8 +1331,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function runAssessmentTutorial(manual = false, retries = 0) {
-        const isFirstLogin = @json(auth()->check() ? auth()->user()->is_first_login : true);
-        const userId = @json(auth()->id() ?? 1);
+        const isFirstLogin = @json($user->is_first_login);
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         const urlParams = new URLSearchParams(window.location.search);

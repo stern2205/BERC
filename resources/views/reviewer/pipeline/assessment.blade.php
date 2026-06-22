@@ -241,7 +241,7 @@
                                             <th class="px-4 py-4 w-16">Item #</th>
                                             <th class="px-4 py-4 min-w-[250px]">Criteria / Question</th>
                                             <th class="px-4 py-4 w-24 text-center">Remark</th>
-                                            <th class="px-4 py-4 w-28 text-center">Line/Pg</th>
+                                            <th class="px-4 py-4 w-28 text-center">Pg/Line</th>
 
                                             <th id="tour-comment-column" class="px-4 py-4 border-l border-gray-200 min-w-[300px]">Your Comments</th>
                                         </tr>
@@ -822,8 +822,8 @@ document.addEventListener('alpine:initialized', () => {
     }
 
     function runReviewerAssessmentTutorial(manual = false) {
-        const isFirstLogin = @json(auth()->user()->is_first_login);
-        const userId = @json(auth()->id());
+        const isFirstLogin = @json($user->is_first_login);
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         if (manual) {

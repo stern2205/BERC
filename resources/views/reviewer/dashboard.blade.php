@@ -276,8 +276,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function runReviewerDashboardTutorial(manual = false) {
-        const isFirstLogin = @json(auth()->user()->is_first_login ?? false);
-        const userId = @json(auth()->id());
+        const isFirstLogin = @json($user->is_first_login ?? false);
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         if (manual) {

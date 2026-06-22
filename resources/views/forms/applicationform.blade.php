@@ -569,7 +569,7 @@
         </tr>
 
         <tr>
-            <td colspan="5" style="padding: 15px; height: 200px; vertical-align: top; text-align: justify; line-height: 1.5;">
+            <td colspan="5" style="padding: 15px; height: 200px; vertical-align: top; text-align: justify; line-height: 1; font-size:11pt">
                 {{ $application->brief_description ?? 'No description provided.' }}
             </td>
         </tr>

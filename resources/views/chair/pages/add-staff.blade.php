@@ -920,7 +920,7 @@ document.addEventListener('alpine:initialized', () => {
     }
 
     function runChairStaffTutorial(manual = false) {
-        const userId = @json(auth()->id());
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         if (manual) {
@@ -1025,8 +1025,8 @@ document.addEventListener('alpine:initialized', () => {
 
     // automatic first-login flow
     loadDriverThenRun(() => {
-        const isFirstLogin = @json(auth()->user()->is_first_login);
-        const userId = @json(auth()->id());
+        const isFirstLogin = @json($user->is_first_login);
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
         const tourState = localStorage.getItem(storageKey);
 

@@ -250,31 +250,38 @@
                             <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white">
                                 <table class="w-full text-left border-collapse table-fixed">
                                     <thead>
-                                        <tr class="bg-gray-50 border-b border-gray-200">
-                                            <th class="px-3 py-2.5 text-[9px] font-black uppercase text-[#1f377d] text-center" style="width:8%;">Item</th>
-                                            <th class="px-3 py-2.5 text-[9px] font-black uppercase text-[#1f377d]" style="width:17%;">Section & Page</th>
-                                            <th class="px-3 py-2.5 text-[9px] font-black uppercase text-[#1f377d]" style="width:35%;">BERC Recommendation</th>
-                                            <th class="px-3 py-2.5 text-[9px] font-black uppercase text-[#1f377d]" style="width:40%;">Researcher Response</th>
+                                        <tr class="bg-gray-100 border-b border-gray-200">
+                                            <th class="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-[#1f377d] text-center" style="width:12%;">Item</th>
+                                            <th class="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-[#1f377d]" style="width:18%;">Section & Page</th>
+                                            <th class="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-[#1f377d]" style="width:35%;">BERC Recommendation</th>
+                                            <th class="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-[#1f377d]" style="width:35%;">Researcher Response</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100">
+                                    <tbody class="divide-y divide-gray-200">
                                         <template x-for="row in selectedProtocol?.revisionRows" :key="row.id">
-                                            <tr class="hover:bg-gray-50/30 transition-colors">
-                                                <td
-                                                    class="px-3 py-3 text-[10px] font-bold text-gray-800 align-top text-center whitespace-normal break-words"
-                                                    x-text="row.item_display">
+                                            <tr class="hover:bg-gray-50/80 transition-colors group">
+                                                <td class="px-4 py-4 align-top text-center bg-gray-50/50">
+                                                    <span class="text-[12px] font-black text-gray-800 whitespace-normal break-words" x-text="row.item_display"></span>
                                                 </td>
-                                                <td class="px-3 py-3 align-top"><span class="text-[10px] font-semibold text-gray-600" x-text="row.section_and_page"></span></td>
-                                                <td class="px-3 py-3 align-top bg-gray-50/50">
-                                                    <div class="text-[10px] leading-relaxed text-gray-700 whitespace-pre-wrap" x-text="row.berc_recommendation"></div>
+
+                                                <td class="px-4 py-4 align-top border-r border-gray-100">
+                                                    <span class="text-[11px] font-bold text-gray-600" x-text="row.section_and_page"></span>
                                                 </td>
-                                                <td class="px-3 py-3 align-top bg-blue-50/30">
-                                                    <div class="text-[10px] leading-relaxed text-bsu-dark font-medium whitespace-pre-wrap" x-text="row.researcher_response"></div>
+
+                                                <td class="px-4 py-4 align-top bg-white">
+                                                    <div class="text-[12px] leading-relaxed text-gray-800 whitespace-pre-wrap" x-text="row.berc_recommendation"></div>
+                                                </td>
+
+                                                <td class="px-4 py-4 align-top bg-blue-50/40 border-l border-blue-100">
+                                                    <div class="text-[12px] leading-relaxed text-bsu-dark font-medium whitespace-pre-wrap" x-text="row.researcher_response"></div>
                                                 </td>
                                             </tr>
                                         </template>
+
                                         <tr x-show="!selectedProtocol?.revisionRows || selectedProtocol.revisionRows.length === 0">
-                                            <td colspan="4" class="px-3 py-8 text-center text-gray-400 text-[10px] font-bold">No specific revision items found for this submission.</td>
+                                            <td colspan="4" class="px-4 py-10 text-center text-gray-400 text-[11px] font-bold italic">
+                                                No specific revision items found for this submission.
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -406,6 +413,17 @@
     </button>
 </div>
 
+<div x-show="notification.open"
+    x-transition.opacity.duration.150ms
+    class="fixed top-20 right-6 z-[9999] bg-white border rounded-lg shadow-lg p-4 w-80"
+    :class="notification.type === 'success' ? 'border-green-200' : 'border-red-200'"
+    x-cloak>
+    <div class="text-[11px] font-black uppercase tracking-wider"
+        :class="notification.type === 'success' ? 'text-green-700' : 'text-red-700'"
+        x-text="notification.title"></div>
+    <div class="text-xs font-semibold text-gray-700 mt-1" x-text="notification.message"></div>
+</div>
+
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('assessmentData', (initialData = []) => ({
@@ -458,15 +476,15 @@ document.addEventListener('alpine:init', () => {
         notificationTimer: null,
 
         showNotification(title, message, type = 'success') {
-            this.notificationTitle = title;
-            this.notificationMessage = message;
-            this.notificationType = type;
-            this.notificationOpen = true;
+            this.notification.title = title;
+            this.notification.message = message;
+            this.notification.type = type;
+            this.notification.open = true;
 
-            if (this.notificationTimer) clearTimeout(this.notificationTimer);
+            if (this.notification.timer) clearTimeout(this.notification.timer);
 
-            this.notificationTimer = setTimeout(() => {
-                this.notificationOpen = false;
+            this.notification.timer = setTimeout(() => {
+                this.notification.open = false;
             }, 3500);
         },
 
@@ -740,8 +758,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function runRevisionValidationTutorial(manual = false, retries = 0) {
-        const isFirstLogin = @json(auth()->check() ? auth()->user()->is_first_login : true);
-        const userId = @json(auth()->id() ?? 1);
+        const isFirstLogin = @json($user->is_first_login);
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         const urlParams = new URLSearchParams(window.location.search);

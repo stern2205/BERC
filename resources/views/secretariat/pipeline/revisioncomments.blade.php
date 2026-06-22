@@ -260,8 +260,8 @@
                                                 </div>
                                             </td>
 
-                                            <td class="px-4 py-5 border-l border-gray-200">
-                                                <div class="text-[10px] text-gray-700 leading-relaxed" x-html="row.reviewers_remarks"></div>
+                                            <td class="px-4 py-5 border-l border-gray-200 align-top bg-white">
+                                                <div class="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap" x-html="row.reviewers_remarks"></div>
                                             </td>
 
                                             <td class="px-4 py-5 border-l border-gray-200">
@@ -865,8 +865,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function runRevisionFormsTutorial(manual = false, retries = 0) {
-        const isFirstLogin = @json(auth()->check() ? auth()->user()->is_first_login : true);
-        const userId = @json(auth()->id() ?? 1);
+        const isFirstLogin = @json($user->is_first_login);
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         const urlParams = new URLSearchParams(window.location.search);

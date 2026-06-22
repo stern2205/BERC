@@ -378,10 +378,14 @@
                     <div>
                         <label class="field-label">Password</label>
                         <input type="password"
-                               name="password"
-                               required
-                               class="form-input"
-                               placeholder="Create a password">
+                            name="password"
+                            required
+                            class="form-input"
+                            placeholder="Create password">
+
+                        <p style="font-size:0.72rem; color:rgba(255,255,255,0.7); margin-top:0.35rem;">
+                            Must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, and 1 special symbol.
+                        </p>
                     </div>
 
                     <div>

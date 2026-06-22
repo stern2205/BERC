@@ -206,18 +206,18 @@
             <div style="display: flex; gap: 20px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
                 <span>Is it necessary to seek the informed consent of the participants?</span>
 
-                <div class="checkbox-wrapper">
-                    <span class="box">@if(($assessmentForm->is_consent_necessary ?? '') === 'yes') ✓ @endif</span>
+                <div class="checkbox-wrapper" style="display: flex; align-items: center; gap: 5px;">
+                    <span class="box" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid black; font-size: 12px; line-height: 1;">@if(($assessmentForm->is_consent_necessary ?? '') === 'yes')<span style="transform: translateY(-1px);">✔</span>@endif</span>
                     <span class="cb-label">Yes</span>
                 </div>
 
-                <div class="checkbox-wrapper">
-                    <span class="box">@if(($assessmentForm->is_consent_necessary ?? '') === 'no') ✓ @endif</span>
+                <div class="checkbox-wrapper" style="display: flex; align-items: center; gap: 5px;">
+                    <span class="box" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid black; font-size: 12px; line-height: 1;">@if(($assessmentForm->is_consent_necessary ?? '') === 'no')<span style="transform: translateY(-1px);">✔</span>@endif</span>
                     <span class="cb-label">No</span>
                 </div>
 
-                <div class="checkbox-wrapper">
-                    <span class="box">@if(($assessmentForm->is_consent_necessary ?? '') === 'unable') ✓ @endif</span>
+                <div class="checkbox-wrapper" style="display: flex; align-items: center; gap: 5px;">
+                    <span class="box" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid black; font-size: 12px; line-height: 1;">@if(($assessmentForm->is_consent_necessary ?? '') === 'unable')<span style="transform: translateY(-1px);">✔</span>@endif</span>
                     <span class="cb-label">Unable to Assess</span>
                 </div>
             </div>

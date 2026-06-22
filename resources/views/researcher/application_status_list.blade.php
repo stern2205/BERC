@@ -1072,7 +1072,7 @@ function openAppDetail(idx) {
         if (initialRevisionBanner) initialRevisionBanner.classList.remove('hidden');
 
         document.getElementById('m-revision-remarks').textContent = app.comments || 'Revisions are required. Please review the comments and resubmit.';
-        document.getElementById('m-revision-btn-link').href = `/resubmission-form/${app.record}`;
+        document.getElementById('m-revision-btn-link').href = "{{ url('/resubmission-form/' . $app->record) }}";
     }
     else {
         // CASE: Application is Approved (or standard) and NEVER required a revision
@@ -1418,7 +1418,7 @@ function openResubDetail(idx) {
     // Because 'incorrect' is now in needsMoreRevision, this block executes successfully
     if (needsMoreRevision) {
         if (nextActionBox) nextActionBox.classList.remove('hidden');
-        if (nextResubBtn) nextResubBtn.href = `/resubmission-form/${rs.record}`;
+        if (nextResubBtn) nextResubBtn.href = "{{ url('/resubmission-form/') }}/" + rs.record;
     } else {
         if (nextActionBox) nextActionBox.classList.add('hidden');
     }
@@ -1581,10 +1581,10 @@ buildCards();
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Check if it is their first login
-    const isFirstLogin = @json(auth()->user()->is_first_login);
+    const isFirstLogin = @json($user->is_first_login);
 
     // 2. Use the unique user key
-    const userId = @json(auth()->id());
+    const userId = @json($user->id);
     const storageKey = 'berc_tutorial_step_' + userId;
 
     // 3. If they already changed their password, ensure the tour is dead
@@ -1665,7 +1665,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <script>
 function restartStatusTutorial() {
-    const userId = @json(auth()->id());
+    const userId = @json($user->id);
     const storageKey = 'berc_tutorial_step_' + userId;
 
     // erase old progress

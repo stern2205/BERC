@@ -1050,8 +1050,8 @@ function downloadAllDocs(btnElement) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const isFirstLogin = @json(auth()->user()->is_first_login);
-    const userId = @json(auth()->id());
+    const isFirstLogin = @json($user->is_first_login);
+    const userId = @json($user->id);
     const storageKey = 'berc_tutorial_step_' + userId;
     const tourState = localStorage.getItem(storageKey);
 
@@ -1112,7 +1112,7 @@ renderApplications();
 
 <script>
 function startHistoryTutorial({ manual = false } = {}) {
-    const userId = @json(auth()->id());
+    const userId = @json($user->id);
     const storageKey = 'berc_tutorial_step_' + userId;
 
     if (manual) {
@@ -1194,8 +1194,8 @@ function restartHistoryTutorial() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const isFirstLogin = @json(auth()->user()->is_first_login);
-    const userId = @json(auth()->id());
+    const isFirstLogin = @json($user->is_first_login);
+    const userId = @json($user->id);
     const storageKey = 'berc_tutorial_step_' + userId;
     const tourState = localStorage.getItem(storageKey);
 

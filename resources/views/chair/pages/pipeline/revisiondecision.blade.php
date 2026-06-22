@@ -64,6 +64,16 @@
     .clean-textarea { width: 100%; border: 1px solid #f3f4f6; border-radius: 6px; padding: 10px; font-size: 12px; color: #374151; background: #f9fafb; transition: all 0.2s; resize: vertical; box-shadow: inset 0 1px 2px rgba(0,0,0,.02); }
     .clean-textarea:focus { outline: none; background: #fff; border-color: var(--bsu-dark); box-shadow: 0 0 0 2px rgba(33,60,113,.1); }
 
+    /* ── Confirm Modal Styles ── */
+    .modal-backdrop-confirm { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-box-confirm { background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.25); width: 100%; max-width: 420px; overflow: hidden; }
+    .modal-header-confirm { background-color: #1e3a8a; padding: 20px 24px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .modal-header-confirm h3 { font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; color: #fff; margin: 0; }
+    .modal-close-btn-confirm { width: 28px; height: 28px; border-radius: 7px; border: none; background: transparent; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, opacity .15s; opacity: 0.7; }
+    .modal-close-btn-confirm:hover { background: rgba(255, 255, 255, 0.15); opacity: 1; }
+    .modal-body-confirm { padding: 24px 24px; }
+    .modal-footer-confirm { padding: 16px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 8px; background: #f9fafb; }
+
     /* Footer Buttons */
     .modal-footer { display:flex; justify-content:flex-end; gap:10px; padding:14px 24px; border-top:1px solid #e5e7eb; background:#fafafa; z-index: 10; }
     .btn { padding:9px 20px; border-radius:8px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; border:none; cursor:pointer; transition:opacity .15s, transform .1s; }
@@ -473,11 +483,12 @@
                 <template x-if="activeView === 'decision_letter'">
                     <div class="flex gap-3">
                         <button class="btn bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors border border-gray-300"
-                                @click="submitDecision('draft')" :disabled="isLoading">
+                                @click="promptSubmit('draft')" :disabled="isLoading">
                             Save Letter Draft
                         </button>
+
                         <button class="btn btn-primary shadow-sm flex items-center gap-2"
-                                @click="submitDecision('finalize')" :disabled="isLoading || !decisionStatus">
+                                @click="promptSubmit('finalize')" :disabled="isLoading || !decisionStatus">
                             <svg x-show="isLoading" class="animate-spin -ml-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" x-cloak>
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -486,6 +497,47 @@
                         </button>
                     </div>
                 </template>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="showConfirmModal" x-cloak class="modal-backdrop-confirm">
+        <div class="modal-box-confirm animate-in zoom-in-95 duration-200" @click.away="showConfirmModal = false">
+            <div class="modal-header-confirm">
+                <h3>Confirm Decision</h3>
+                <button type="button" class="modal-close-btn-confirm" @click="showConfirmModal = false">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body-confirm">
+                <p class="text-[12px] text-gray-600 mb-2">You are about to finalize the decision letter for:</p>
+                <p class="text-[13px] font-black text-bsu-dark uppercase mb-4 leading-snug" x-text="selectedProtocol?.title"></p>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Final Decision</p>
+                    <p class="text-xs font-black uppercase"
+                        :class="{
+                            'text-green-700': decisionStatus === 'approved',
+                            'text-yellow-700': decisionStatus === 'minor_revision' || decisionStatus === 'major_revision',
+                            'text-red-700': decisionStatus === 'rejected'
+                        }"
+                        x-text="decisionStatus ? decisionStatus.replace('_', ' ') : ''"></p>
+                </div>
+                <p class="text-[11px] text-gray-500 mt-4">Are you sure you want to officially record this decision and notify the Principal Investigator?</p>
+            </div>
+            <div class="modal-footer-confirm">
+                <button type="button"
+                        class="px-4 py-2 rounded-lg border border-gray-200 bg-white text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer"
+                        @click="showConfirmModal = false">
+                    Cancel
+                </button>
+                <button type="button"
+                        class="px-5 py-2 rounded-lg bg-[#D32F2F] text-white text-[11px] font-extrabold uppercase tracking-wider shadow-md hover:bg-red-700 hover:shadow-lg transition-all flex items-center cursor-pointer border-none disabled:opacity-50"
+                        @click="executeSubmit()"
+                        :disabled="isLoading">
+                    <svg style="width:14px;height:14px;margin-right:6px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Confirm Finalize
+                </button>
             </div>
         </div>
     </div>
@@ -530,6 +582,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         isLoading: false,
+        showConfirmModal: false,
+        pendingActionType: '',
         notificationOpen: false,
         notificationTitle: '',
         notificationMessage: '',
@@ -839,17 +893,26 @@ document.addEventListener('alpine:init', () => {
             setTimeout(() => this.notificationOpen = false, 4000);
         },
 
-        async submitDecision(actionType) {
-            if (actionType === 'finalize' && !this.decisionStatus) {
-                alert('Please select a final decision status before validating.');
-                return;
-            }
+        promptSubmit(actionType) {
+            this.pendingActionType = actionType;
 
-            if (actionType === 'finalize' && !confirm('Are you sure you want to finalize this decision? This will officially update the application status.')) {
-                return;
+            if (actionType === 'finalize') {
+                if (!this.decisionStatus) {
+                    alert('Please select a final decision status before validating.');
+                    return;
+                }
+                this.showConfirmModal = true;
+            } else {
+                // If it's just 'draft', skip the modal and save immediately
+                this.executeSubmit();
             }
+        },
 
+        async executeSubmit() {
+            this.showConfirmModal = false; // Close modal automatically
             this.isLoading = true;
+
+            const actionType = this.pendingActionType;
 
             const payload = {
                 action_type: actionType,
@@ -938,7 +1001,7 @@ document.addEventListener('alpine:initialized', () => {
     }
 
     function runChairRevisionsTutorial(manual = false) {
-        const userId = @json(auth()->id());
+        const userId = @json($user->id());
         const storageKey = 'berc_tutorial_step_' + userId;
 
         if (manual) {
@@ -1074,8 +1137,8 @@ document.addEventListener('alpine:initialized', () => {
     };
 
     loadDriverThenRun(() => {
-        const isFirstLogin = @json(auth()->user()->is_first_login);
-        const userId = @json(auth()->id());
+        const isFirstLogin = @json($user->is_first_login);
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
         const tourState = localStorage.getItem(storageKey);
 

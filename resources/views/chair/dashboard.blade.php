@@ -890,7 +890,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function runChairDashboardTutorial(manual = false) {
-        const userId = @json(auth()->id());
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         if (manual) {
@@ -974,8 +974,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     loadDriverThenRun(() => {
-        const isFirstLogin = @json(auth()->user()->is_first_login);
-        const userId = @json(auth()->id());
+        const isFirstLogin = @json($user->is_first_login);
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
         const tourState = localStorage.getItem(storageKey);
 

@@ -208,23 +208,29 @@
             <div style="display: flex; gap: 20px; margin-bottom: 10px;">
                 <span>Is it necessary to seek the informed consent of the participants?</span>
 
-                <div class="checkbox-wrapper">
-                    <span class="box">
-                        @if($assessmentForm->is_consent_necessary === 'yes') ✔ @endif
+                <div class="checkbox-wrapper" style="display: flex; align-items: center; gap: 5px;">
+                    <span class="box" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid black;">
+                        @if($assessmentForm->is_consent_necessary === 'yes')
+                        <svg style="width: 10px; height: 10px; color: black;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        @endif
                     </span>
                     <span class="cb-label">Yes</span>
                 </div>
 
-                <div class="checkbox-wrapper">
-                    <span class="box">
-                        @if($assessmentForm->is_consent_necessary === 'no') ✔ @endif
+                <div class="checkbox-wrapper" style="display: flex; align-items: center; gap: 5px;">
+                    <span class="box" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid black;">
+                        @if($assessmentForm->is_consent_necessary === 'no')
+                        <svg style="width: 10px; height: 10px; color: black;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        @endif
                     </span>
                     <span class="cb-label">No</span>
                 </div>
 
-                <div class="checkbox-wrapper">
-                    <span class="box">
-                        @if($assessmentForm->is_consent_necessary === 'unable') ✔ @endif
+                <div class="checkbox-wrapper" style="display: flex; align-items: center; gap: 5px;">
+                    <span class="box" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid black;">
+                        @if($assessmentForm->is_consent_necessary === 'unable')
+                        <svg style="width: 10px; height: 10px; color: black;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        @endif
                     </span>
                     <span class="cb-label">Unable to Assess</span>
                 </div>
