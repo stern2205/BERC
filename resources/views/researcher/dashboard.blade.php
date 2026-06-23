@@ -387,7 +387,7 @@
 
 <script>
     function startManualTutorial() {
-        const userId = @json($user->id());
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         localStorage.setItem(storageKey, 'dashboard');
