@@ -345,14 +345,6 @@
         </div>
     </div>
 
-    <div class="footer-links">
-        <a href="#">About us</a>
-        <span style="color:rgba(255,255,255,0.45);">|</span>
-        <a href="#">Contact</a>
-        <span style="color:rgba(255,255,255,0.45);">|</span>
-        <a href="#">Help</a>
-    </div>
-
     <script>
         var hamburger = document.getElementById('hamburger');
         var mobileMenu = document.getElementById('mobile-menu');
