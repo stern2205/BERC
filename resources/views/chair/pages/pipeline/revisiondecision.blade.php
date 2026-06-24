@@ -1001,7 +1001,7 @@ document.addEventListener('alpine:initialized', () => {
     }
 
     function runChairRevisionsTutorial(manual = false) {
-        const userId = @json($user->id());
+        const userId = @json($user->id);
         const storageKey = 'berc_tutorial_step_' + userId;
 
         if (manual) {

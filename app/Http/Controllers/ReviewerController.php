@@ -639,7 +639,7 @@ class ReviewerController extends Controller
         $revisions = $formattedRevisions->where('is_done', false)->values();
         $validatedRevisions = $formattedRevisions->where('is_done', true)->values();
 
-        return view('reviewer.pipeline.revision', compact('revisions', 'validatedRevisions'));
+        return view('reviewer.pipeline.revision', compact('user', 'revisions', 'validatedRevisions'));
     }
 
     //this function handles the submission of the reviewer's validation of the revisions. It validates the incoming request to ensure that the protocol code, revision number, and rows of data are provided in the correct format. It then identifies the reviewer and updates only the specific slots in the revision responses that belong to this reviewer. After updating the responses, it checks if all reviewers have completed their validations for this revision. If all reviewers are done, it updates the parent revision tracker status to "review_finished". The function also logs the submission of the reviewer's comments in the protocol routing logs and cleans up any temporary draft files. Finally, it returns a JSON response indicating the success or failure of the operation.

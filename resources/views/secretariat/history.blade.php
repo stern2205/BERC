@@ -638,17 +638,16 @@ const STATUS_UI = {
 var rows = [];
 let currentRecordCode = null; // Track current active protocol code for downloads
 
-// ── Download Handlers ──
 function downloadAllDocs() {
     if (!currentRecordCode) return;
-    // Change this URL to match your exact route name for the ZIP download method
-    window.location.href = `/documents/api/download-zip/${currentRecordCode}`;
+
+    window.location.href = `${ '{{ url("/documents/api/download-zip") }}' }/${currentRecordCode}`;
 }
 
 function downloadResubDocs() {
     if (!currentRecordCode) return;
-    // Since your backend logic bundles revisions into the same ZIP, we use the same endpoint
-    window.location.href = `/documents/api/download-zip/${currentRecordCode}`;
+
+    window.location.href = `${ '{{ url("/documents/api/download-zip") }}' }/${currentRecordCode}`;
 }
 
 // ── Icon Helpers ──

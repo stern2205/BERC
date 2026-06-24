@@ -1072,7 +1072,7 @@ function openAppDetail(idx) {
         if (initialRevisionBanner) initialRevisionBanner.classList.remove('hidden');
 
         document.getElementById('m-revision-remarks').textContent = app.comments || 'Revisions are required. Please review the comments and resubmit.';
-        document.getElementById('m-revision-btn-link').href = "{{ url('/resubmission-form/' . $app->record) }}";
+        document.getElementById('m-revision-btn-link').href = `${ '{{ url("/resubmission-form") }}' }/${app.record}`;
     }
     else {
         // CASE: Application is Approved (or standard) and NEVER required a revision
@@ -1418,7 +1418,9 @@ function openResubDetail(idx) {
     // Because 'incorrect' is now in needsMoreRevision, this block executes successfully
     if (needsMoreRevision) {
         if (nextActionBox) nextActionBox.classList.remove('hidden');
-        if (nextResubBtn) nextResubBtn.href = "{{ url('/resubmission-form/') }}/" + rs.record;
+        if (nextResubBtn) {
+            nextResubBtn.href = `{{ url("/resubmission-form") }}/${rs.record}`;
+        }
     } else {
         if (nextActionBox) nextActionBox.classList.add('hidden');
     }

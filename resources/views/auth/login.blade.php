@@ -248,9 +248,9 @@
             </div>
 
             <div class="hidden md:flex items-center space-x-8 text-[11px] font-bold text-gray-500 uppercase tracking-widest">
-                <a href="/" class="hover:text-blue-900 transition-colors">Home</a>
-                <a href="/#facts" class="hover:text-blue-900 transition-colors">Facts</a>
-                <a href="/#about" class="hover:text-blue-900 transition-colors">About</a>
+                <a href="{{ url('/') }}" class="hover:text-blue-900 transition-colors">Home</a>
+                <a href="{{ url('/#facts') }}" class="hover:text-blue-900 transition-colors">Facts</a>
+                <a href="{{ url('/#about') }}" class="hover:text-blue-900 transition-colors">About</a>
                 <a href="{{ route('signup.form') }}" class="bg-[#1f377a] text-white px-5 py-2 rounded-sm hover:bg-blue-800 transition shadow-sm">
                     Sign Up
                 </a>
@@ -265,9 +265,9 @@
 
         <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-100 shadow-md">
             <div class="flex flex-col px-5 py-4 space-y-3 text-[12px] font-bold text-gray-600 uppercase tracking-widest">
-                <a href="/" class="hover:text-blue-900 transition-colors py-1">Home</a>
-                <a href="/#facts" class="hover:text-blue-900 transition-colors py-1">Facts</a>
-                <a href="/#about" class="hover:text-blue-900 transition-colors py-1">About</a>
+                <a href="{{ url('/') }}" class="hover:text-blue-900 transition-colors py-1">Home</a>
+                <a href="{{ url('/#facts') }}" class="hover:text-blue-900 transition-colors py-1">Facts</a>
+                <a href="{{ url('/#about') }}" class="hover:text-blue-900 transition-colors py-1">About</a>
                 <a href="{{ route('signup.form') }}" class="mt-1 bg-[#1f377a] text-white text-center px-5 py-2.5 rounded hover:bg-blue-800 transition shadow-sm">
                     Sign Up
                 </a>
